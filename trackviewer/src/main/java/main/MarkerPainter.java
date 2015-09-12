@@ -19,9 +19,9 @@ import org.jxmapviewer.painter.AbstractPainter;
  */
 public class MarkerPainter extends AbstractPainter<JXMapViewer> {
 
-    private List<GeoPosition> track;
-    private List<Integer> markers = new ArrayList<>();
-    private Color color;
+    private final List<GeoPosition> track;
+    private final List<Integer> markers = new ArrayList<>();
+    private final Color color;
 
     /**
      * @param track the track
@@ -59,15 +59,9 @@ public class MarkerPainter extends AbstractPainter<JXMapViewer> {
         // incorporate zoom to some extent
         int width = Math.max(1, 10 - map.getZoom() * 2);
 
-        // do the drawing
-        g.setColor(new Color(128, 0, 0));
-        g.setStroke(new BasicStroke(width + 2));
-
-        draw(g, map, 5 * width);
-
         // do the drawing again
         g.setColor(color);
-        g.setStroke(new BasicStroke(width));
+        g.setStroke(new BasicStroke(width + 2));
 
         draw(g, map, 5 * width);
     }
