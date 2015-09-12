@@ -99,4 +99,8 @@ public final class TrackTableModel extends AbstractTableModel {
 
         fireTableCellUpdated(row, col);
     }
+    
+    public Track getTrack(int rowIdx) {
+        return tracks.get(rowIdx);
+    }
 }
