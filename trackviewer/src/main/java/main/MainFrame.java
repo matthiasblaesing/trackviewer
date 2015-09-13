@@ -7,6 +7,7 @@ import java.io.File;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import javax.swing.Action;
@@ -19,6 +20,8 @@ import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
+import javax.swing.RowSorter;
+import javax.swing.SortOrder;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.table.AbstractTableModel;
@@ -132,11 +135,11 @@ public class MainFrame extends JFrame {
     }
 
     private JTable createTable(final List<Track> tracks) {
-        TrackTableModel model = new TrackTableModel(tracks);
+        final TrackTableModel model = new TrackTableModel(tracks);
 
         final JTable table = new JShadedTable(model);
 
-		// Workaround to separate IDs from labels
+	// Workaround to separate IDs from labels
         // By default, ID is not set or used by JTable
         // but the columnModel uses it. If not available it uses
         // the ID that is defined by the TableModel
@@ -164,19 +167,18 @@ public class MainFrame extends JFrame {
         // Set row sorter
         TableRowSorter<TableModel> sorter = new TableRowSorter<>(table.getModel());
         table.setRowSorter(sorter);
-        sorter.toggleSortOrder(0);		// sorts ascending
-        sorter.toggleSortOrder(0);		// sorts descending
+        sorter.setSortKeys(Collections.singletonList(new RowSorter.SortKey(0, SortOrder.DESCENDING)));
 
         // Set selection model
         table.getSelectionModel().setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
         table.getSelectionModel().addListSelectionListener(new ListMultiSelectionListener() {
             @Override
             public void valueChanged(List<Integer> indices) {
-                List<Track> selTracks = new ArrayList<>();
+                List<Track> selTracks = new ArrayList<>(indices.size());
 
                 for (Integer idx : indices) {
                     idx = table.convertRowIndexToModel(idx);
-                    selTracks.add(tracks.get(idx));
+                    selTracks.add(model.getTrack(idx));
                 }
 
                 viewer.showRoute(selTracks);
