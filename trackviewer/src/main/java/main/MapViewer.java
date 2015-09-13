@@ -4,7 +4,9 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.swing.JComponent;
 import javax.swing.event.MouseInputListener;
@@ -38,6 +40,8 @@ public class MapViewer extends JComponent {
 
     private List<RoutePainter> routePainters = new ArrayList<>();
     private List<MarkerPainter> markerPainters = new ArrayList<>();
+    
+    private boolean fitViewportOnChange = true;
 
     /**
      * Constructs a new instance
@@ -80,18 +84,16 @@ public class MapViewer extends JComponent {
      * @param tracks the list of track
      */
     public void showRoute(List<Track> tracks) {
-        // Set the focus
-//		mapViewer.setZoom(10);
-//		mapViewer.setAddressLocation(track.getPoints().iterator().next().getPos());
-
         markerPainters.clear();
         routePainters.clear();
 
+        Set<GeoPosition> positions = new HashSet<>();
         List<Painter<JXMapViewer>> painters = new ArrayList<>();
 
         int i = 0;
         for (Track track : tracks) {
             List<GeoPosition> route = track.getRoute();
+            positions.addAll(route);
             Color color = ColorProvider.getMainColor(i++);
 
             MarkerPainter markerPainter = new MarkerPainter(route, color);
@@ -108,7 +110,10 @@ public class MapViewer extends JComponent {
         }
 
         painter.setPainters(painters);
-
+        
+        if(fitViewportOnChange) {
+            mapViewer.zoomToBestFit(positions, 1F);
+        }
     }
 
     /**
@@ -128,5 +133,26 @@ public class MapViewer extends JComponent {
         if (index > minIdx && index < maxIdx) {
             mp.addMarker(index);
         }
+    }
+
+    /**
+     * Determine whether the 
+     * 
+     * @return 
+     */
+    public boolean isFitViewportOnChange() {
+        return fitViewportOnChange;
+    }
+
+    /**
+     * When true, the viewport (zoom + position) will be adjusted to display the
+     * whole track when the Tracks are changed.
+     * 
+     * @param fitViewportOnChange 
+     */
+    public void setFitViewportOnChange(boolean fitViewportOnChange) {
+        boolean oldValue = isFitViewportOnChange();
+        this.fitViewportOnChange = fitViewportOnChange;
+        this.firePropertyChange("fitViewportOnChange", oldValue, fitViewportOnChange);
     }
 }
