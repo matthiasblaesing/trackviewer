@@ -23,6 +23,10 @@ import com.garmin.xmlschemas.trainingcenterdatabase.v2.PositionT;
 import com.garmin.xmlschemas.trainingcenterdatabase.v2.TrackT;
 import com.garmin.xmlschemas.trainingcenterdatabase.v2.TrackpointT;
 import com.garmin.xmlschemas.trainingcenterdatabase.v2.TrainingCenterDatabaseT;
+import java.util.Arrays;
+import joptsimple.OptionException;
+import joptsimple.OptionParser;
+import joptsimple.OptionSet;
 
 /**
  * Fixes all elevations in all .tcx files in a folder using the
@@ -31,16 +35,50 @@ import com.garmin.xmlschemas.trainingcenterdatabase.v2.TrainingCenterDatabaseT;
  * @author Martin Steiger
  */
 public class Converter {
+    private final ElevationFixer fixer;
+    
+    public static void main(String[] args) {
+        OptionParser op = new OptionParser();
+        op.acceptsAll(Arrays.asList(new String[]{"k", "apiKey"}), "MapQuest API Key to use for requests")
+                .withRequiredArg()
+                .required()
+                .ofType(String.class);
+        op.acceptsAll(Arrays.asList(new String[]{"h", "help"}), "Show help");
+        
+        try {
+            OptionSet optionset = op.parse(args);
+            
+            if(optionset.has("help")) {
+                try {
+                    op.printHelpOn(System.out);
+                } catch (IOException ex1) {
+                }
+                System.exit(0);
+            } else {
+                new Converter((String) optionset.valueOf("apiKey")).main0();
+            }
+        } catch (OptionException ex) {
+            System.err.println(ex.getMessage());
+            try {
+                op.printHelpOn(System.err);
+            } catch (IOException ex1) {}
+            System.exit(1);
+        }
+    }
 
+    public Converter(String apiKey) {
+        this.fixer = new ElevationFixer(apiKey);
+    }
+    
     /**
      * @param args (ignored)
      */
-    public static void main(String[] args) {
+    private void main0() {
         File folderIn = new File(System.getProperty("user.home")
                 + File.separator + "trackviewer" + File.separator + "original");
         File folderOut = new File(System.getProperty("user.home")
                 + File.separator + "trackviewer" + File.separator + "converted");
-
+        
         folderOut.mkdirs();
 
         String[] files = folderIn.list(new FilenameFilter() {
@@ -99,10 +137,10 @@ public class Converter {
         }
     }
 
-    private static void fixElevations(TcxAdapter tcx, InputStream is, OutputStream os) throws JAXBException, IOException {
+    private void fixElevations(TcxAdapter tcx, InputStream is, OutputStream os) throws JAXBException, IOException {
         TrainingCenterDatabaseT data = tcx.unmarshallObject(is);
         List<GeoPosition> route = extractRoute(data);
-        List<Double> ele = ElevationFixer.getElevations(route);
+        List<Double> ele = fixer.getElevations(route);
         setElevations(data, ele);
         tcx.marshallObject(os, data);
     }
@@ -119,7 +157,7 @@ public class Converter {
                         if (pos != null) {
                             double elevation = it.next();
 
-                            if (elevation < -32000) {
+                            if (elevation < -32000) { // return value -32768 indicates unknown value
                                 System.err.println("Invalid elevation: "
                                         + elevation);
                                 pt.setAltitudeMeters(null);

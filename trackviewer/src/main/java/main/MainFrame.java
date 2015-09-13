@@ -4,9 +4,11 @@ import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.event.KeyEvent;
 import java.io.File;
+import java.io.IOException;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -27,6 +29,9 @@ import javax.swing.SwingUtilities;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.TableModel;
 import javax.swing.table.TableRowSorter;
+import joptsimple.OptionException;
+import joptsimple.OptionParser;
+import joptsimple.OptionSet;
 import main.actions.AutomaticZoom;
 import main.actions.ExportTrackAction;
 import main.actions.FixElevationAction;
@@ -41,6 +46,7 @@ import main.table.SpeedFormat;
 import main.table.TimeFormat;
 import main.table.TrackTableModel;
 import track.Track;
+import webservice.Converter;
 
 /**
  * A simple sample application that shows a OSM map of Europe
@@ -63,7 +69,7 @@ public class MainFrame extends JFrame {
     /**
      * Constructs a new instance
      */
-    public MainFrame(String tracksdir) {
+    public MainFrame(String tracksdir, String apiKey) {
         super("TrackViewer");
 
         File folder;
@@ -83,7 +89,7 @@ public class MainFrame extends JFrame {
 
         automaticZoomAction = new AutomaticZoom(viewer);
         exportTrackAction = new ExportTrackAction(table);
-        fixElevationAction = new FixElevationAction(table);
+        fixElevationAction = new FixElevationAction(apiKey != null ? apiKey: "", table);
         insertGapsAction = new InsertGapsAction(table);
         quitAction = new QuitAction();
         
@@ -217,13 +223,45 @@ public class MainFrame extends JFrame {
      * @param args the program args (ignored)
      */
     public static void main(String[] args) {
-        String tracksdir = null;
-        if(args.length > 0) {
-            tracksdir = args[args.length - 1];
+        OptionParser op = new OptionParser();
+        op.acceptsAll(Arrays.asList(new String[]{"k", "apiKey"}), "MapQuest API Key to use for requests")
+                .withRequiredArg()
+                .ofType(String.class);
+        op.acceptsAll(Arrays.asList(new String[]{"t", "tracksdir"}), "Track directory")
+                .withRequiredArg()
+                .ofType(String.class);
+        op.nonOptions("First argument is recognised as trackdirectory (deprectated)");
+                
+        op.acceptsAll(Arrays.asList(new String[]{"h", "help"}), "Show help");
+        
+        
+        try {
+            OptionSet optionset = op.parse(args);
+            
+            if(optionset.has("help")) {
+                try {
+                    op.printHelpOn(System.out);
+                } catch (IOException ex1) {
+                }
+                System.exit(0);
+            } else {
+                String tracksdir = null;
+                if(optionset.has("tracksdir")) {
+                    tracksdir = (String) optionset.valueOf("tracksdir");
+                } else if (optionset.nonOptionArguments().size() > 0) {
+                    tracksdir = (String) optionset.nonOptionArguments().get(0);
+                }
+                JFrame frame = new MainFrame(tracksdir, (String) optionset.valueOf("apiKey"));
+                frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+                frame.setSize(1024, 768);
+                frame.setVisible(true);
+            }
+        } catch (OptionException ex) {
+            System.err.println(ex.getMessage());
+            try {
+                op.printHelpOn(System.err);
+            } catch (IOException ex1) {}
+            System.exit(1);
         }
-        JFrame frame = new MainFrame(tracksdir);
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(1024, 768);
-        frame.setVisible(true);
     }
 }

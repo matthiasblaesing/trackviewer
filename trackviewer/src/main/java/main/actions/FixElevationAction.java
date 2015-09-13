@@ -12,14 +12,25 @@ public class FixElevationAction extends AbstractAction {
 
     private static final long serialVersionUID = -3691668348789171952L;
     private final JTable table;
+    private final TrackElevationFixer fixer;
 
-    public FixElevationAction(JTable table) {
+    public FixElevationAction(String apiKey, JTable table) {
         super("Fix Elevation");
         putValue(ACCELERATOR_KEY, KeyStroke.getKeyStroke(KeyEvent.VK_E, ActionEvent.ALT_MASK));
         putValue(MNEMONIC_KEY, (int) 'F');
         this.table = table;
+        if(apiKey != null && (! apiKey.trim().isEmpty())) {
+            this.fixer = new TrackElevationFixer(apiKey);
+        } else {
+            this.fixer = null;
+        }
     }
 
+    @Override
+    public boolean isEnabled() {
+        return fixer != null;
+    }
+    
     @Override
     public void actionPerformed(ActionEvent e) {
         int idx = table.getSelectedRow();
@@ -28,6 +39,6 @@ public class FixElevationAction extends AbstractAction {
         assert table.getModel() instanceof TrackTableModel;
         TrackTableModel ttm = (TrackTableModel) table.getModel();
         
-        TrackElevationFixer.fixTrack(ttm.getTrack(idx));
+        fixer.fixTrack(ttm.getTrack(idx));
     }
 }

@@ -18,17 +18,27 @@ public class TrackElevationFixer {
 
     private static final Log log = LogFactory.getLog(TrackElevationFixer.class);
 
+    private final ElevationFixer elevationFixer;
+
+    public TrackElevationFixer(String apiKey) {
+        this.elevationFixer = new ElevationFixer(apiKey);
+    }
+    
     /**
      * @param track the track to fix
      */
-    public static void fixTrack(Track track) {
-        List<Double> elevations;
+    public void fixTrack(Track track) {
         try {
-            elevations = ElevationFixer.getElevations(track.getRoute());
+            List<Double> elevations = elevationFixer.getElevations(track.getRoute());
             List<TrackPoint> points = track.getPoints();
 
             for (int i = 0; i < points.size(); i++) {
-                points.get(i).setElevation(elevations.get(i));
+                Double elevation = elevations.get(i);
+                if (elevation < -32000) { // return value -32768 indicates unknown value
+                    points.get(i).setElevation(Double.NaN);
+                } else {
+                    points.get(i).setElevation(elevation);
+                }
             }
 
             log.info("Updated " + points.size() + " elevations");

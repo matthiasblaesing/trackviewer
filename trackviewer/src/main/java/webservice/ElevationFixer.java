@@ -28,16 +28,33 @@ public class ElevationFixer {
     private static final String url = "http://open.mapquestapi.com/elevation/v1/profile?useFilter=true";
 
     /**
-     * The compressed version does not work atm (bug @ mapquest)
-     */
-    private static final boolean useCompression = false;
-
-    /**
      * This is just a guess that seems to work for MapQuest Elevation API v1 200
-     * seems to be ok for raw 1500 seems to be ok for compressed
+     * seems to be ok for raw 1500 seems to be ok for compressed 
+     * (manual test was done with 1350 trackpoints)
      */
     private static final int chunkSize = 200;
+    private static final int chunkSizeCompressed = 1500;
 
+    /**
+     * Format to use for request - if false raw format is used, if true cmp format is used
+     */
+    private final boolean useCompression;
+    
+    /**
+     * API-Access Key for Mapquest API
+     */
+    private final String apiKey;
+
+    public ElevationFixer(String apiKey) {
+        this(true, apiKey);
+    }
+
+    
+    public ElevationFixer(boolean useCompression, String apiKey) {
+        this.useCompression = useCompression;
+        this.apiKey = apiKey;
+    }
+    
     /**
      * Retrieves a list of elevations from a web service using google polyline
      * compression URLs.
@@ -46,9 +63,11 @@ public class ElevationFixer {
      * @return the list of elevations
      * @throws IOException if something goes wrong
      */
-    public static List<Double> getElevations(List<GeoPosition> routeFull) throws IOException {
+    public List<Double> getElevations(List<GeoPosition> routeFull) throws IOException {
+        int requestChunk = useCompression ? chunkSizeCompressed : chunkSize;
+        
         int min = 0;
-        int max = Math.min(routeFull.size(), min + chunkSize);
+        int max = Math.min(routeFull.size(), min + requestChunk);
 
         List<Double> ele = new ArrayList<>();
 
@@ -76,7 +95,7 @@ public class ElevationFixer {
             ele.addAll(result);
 
             min = max;
-            max = Math.min(routeFull.size(), min + chunkSize);
+            max = Math.min(routeFull.size(), min + requestChunk);
         }
 
         return ele;
@@ -103,9 +122,9 @@ public class ElevationFixer {
         return s;
     }
 
-    private static List<Double> queryElevations(String s) throws IOException {
+    private List<Double> queryElevations(String s) throws IOException {
         try {
-            String response = queryUrl(url + s);
+            String response = queryUrl(url + "&key=" + apiKey + s);
 
             handleInfo(response);
 
@@ -166,9 +185,7 @@ public class ElevationFixer {
 
         for (int i = 0; i < arr.length(); i++) {
             JSONObject obj2 = (JSONObject) arr.get(i);
-
-            double val = obj2.getDouble("height");
-            data.add(Double.valueOf(val));		// cache often-used values
+            data.add(obj2.getDouble("height"));
         }
 
         return data;
