@@ -269,10 +269,6 @@ public class JChart extends JComponent {
     public void setData(List<List<Point2D>> data) {
         series.clear();
 
-        if (data.isEmpty()) {
-            return;
-        }
-
         series.addAll(data);		// does not copy the content
 
         Rectangle2D bounds = null;

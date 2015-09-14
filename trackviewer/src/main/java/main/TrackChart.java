@@ -179,10 +179,6 @@ public class TrackChart extends JComponent {
     private void reload() {
         List<List<Point2D>> data = new ArrayList<>();
 
-        if (tracks.isEmpty()) {
-            return;
-        }
-
         for (Track track : tracks) {
             List<Point2D> pts = new ArrayList<>();
 
