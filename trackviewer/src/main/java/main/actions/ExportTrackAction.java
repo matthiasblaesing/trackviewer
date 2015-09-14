@@ -1,11 +1,14 @@
 package main.actions;
 
+import gpx.GpxAdapter;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.Collections;
 import javax.swing.AbstractAction;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
@@ -14,6 +17,7 @@ import javax.swing.KeyStroke;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.filechooser.FileFilter;
+import javax.xml.bind.JAXBException;
 import main.TrackLoader;
 import main.table.TrackTableModel;
 import org.apache.commons.logging.Log;
@@ -70,8 +74,13 @@ public class ExportTrackAction extends AbstractAction implements ListSelectionLi
                     fileName += ".gpx";
                 }
                 lastFolder = fileChooser.getSelectedFile().getParentFile();
-                TrackLoader.saveAsGpx(fileName, track);
+                GpxAdapter adapter = new GpxAdapter();
+                try(FileOutputStream fos = new FileOutputStream(fileName)) {
+                    adapter.write(fos, Collections.singletonList(track));
+                }
             }
+        } catch (JAXBException e) {
+            throw new RuntimeException(e);
         } catch (IOException e) {
             log.error("Failed to save track", e);
             JOptionPane.showMessageDialog(null,

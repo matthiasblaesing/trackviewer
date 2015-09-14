@@ -11,7 +11,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
 import javax.swing.Action;
 import javax.swing.JCheckBoxMenuItem;
 
@@ -26,7 +25,6 @@ import javax.swing.RowSorter;
 import javax.swing.SortOrder;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
-import javax.swing.table.AbstractTableModel;
 import javax.swing.table.TableModel;
 import javax.swing.table.TableRowSorter;
 import joptsimple.OptionException;
@@ -46,7 +44,6 @@ import main.table.SpeedFormat;
 import main.table.TimeFormat;
 import main.table.TrackTableModel;
 import track.Track;
-import webservice.Converter;
 
 /**
  * A simple sample application that shows a OSM map of Europe
@@ -81,11 +78,9 @@ public class MainFrame extends JFrame {
             folder = new File(tracksdir);
         }
 
-        final List<Track> tracks = new CopyOnWriteArrayList<>();
-
         viewer = new MapViewer();
 
-        table = createTable(tracks);
+        createTable();
 
         automaticZoomAction = new AutomaticZoom(viewer);
         exportTrackAction = new ExportTrackAction(table);
@@ -95,13 +90,11 @@ public class MainFrame extends JFrame {
         
         TrackLoader.readTracks(folder, new TrackLoadListener() {
             @Override
-            public void trackLoaded(Track track) {
-                tracks.add(track);
-
+            public void trackLoaded(final Track track) {
                 SwingUtilities.invokeLater(new Runnable() {
                     @Override
                     public void run() {
-                        ((AbstractTableModel) table.getModel()).fireTableDataChanged();
+                        ((TrackTableModel) table.getModel()).addTracks(track);
                     }
                 });
             }
@@ -136,14 +129,14 @@ public class MainFrame extends JFrame {
         tablePane.setMinimumSize(minimumSize);
         chartSplitPane.setMinimumSize(minimumSize);
 
-        add(createMenu(tracks), BorderLayout.NORTH);
+        add(createMenu(), BorderLayout.NORTH);
         add(mainSplitPane);
     }
 
-    private JTable createTable(final List<Track> tracks) {
-        final TrackTableModel model = new TrackTableModel(tracks);
+    private JTable createTable() {
+        final TrackTableModel model = new TrackTableModel();
 
-        final JTable table = new JShadedTable(model);
+        table = new JShadedTable(model);
 
 	// Workaround to separate IDs from labels
         // By default, ID is not set or used by JTable
@@ -195,7 +188,7 @@ public class MainFrame extends JFrame {
         return table;
     }
 
-    private JMenuBar createMenu(List<Track> tracks) {
+    private JMenuBar createMenu() {
         JMenuBar menuBar = new JMenuBar();
 
         JMenu menu = new JMenu("File");

@@ -1,7 +1,10 @@
 package main.table;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import javax.swing.SwingUtilities;
 
 import javax.swing.table.AbstractTableModel;
 
@@ -15,17 +18,13 @@ import track.Track;
 public final class TrackTableModel extends AbstractTableModel {
 
     private static final long serialVersionUID = 819860756869723997L;
-    private final List<Track> tracks;
+    private final List<Track> tracks = new ArrayList<>();
     private final String[] columnIds = {"date", "distance", "time", "speed", "altitude", "comments"};
     private final String[] columnLabels = {"Date", "Distance (km)", "Time", "Avg. Speed (km/h)", "Altitude Diff. (m)", "Comments"};
     private final Class<?>[] columnClass = {Date.class, Double.class, Date.class, Double.class, Double.class, String.class};
     private final boolean[] columnEditable = {false, false, false, false, false, true};
 
-    /**
-     * @param tracks the list of tracks
-     */
-    public TrackTableModel(List<Track> tracks) {
-        this.tracks = tracks;
+    public TrackTableModel() {
     }
 
     /**
@@ -89,6 +88,7 @@ public final class TrackTableModel extends AbstractTableModel {
 
     @Override
     public void setValueAt(Object value, int row, int col) {
+        assert SwingUtilities.isEventDispatchThread();
         Track track = tracks.get(row);
 
         switch (col) {
@@ -100,7 +100,20 @@ public final class TrackTableModel extends AbstractTableModel {
         fireTableCellUpdated(row, col);
     }
     
+    public void clear() {
+        assert SwingUtilities.isEventDispatchThread();
+        tracks.clear();
+        fireTableDataChanged();
+    }
+    
+    public void addTracks(Track... tracks) {
+        assert SwingUtilities.isEventDispatchThread();
+        this.tracks.addAll(Arrays.asList(tracks));
+        fireTableDataChanged();
+    }
+    
     public Track getTrack(int rowIdx) {
+        assert SwingUtilities.isEventDispatchThread();
         return tracks.get(rowIdx);
     }
 }

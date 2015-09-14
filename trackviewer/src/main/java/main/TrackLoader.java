@@ -115,26 +115,4 @@ public class TrackLoader {
         }
 
     }
-
-    /**
-     * @param fname the filename
-     * @param track the track data
-     * @throws IOException if something goes wrong
-     */
-    public static void saveAsGpx(String fname, Track track) throws IOException {
-        OutputStream os = null;
-
-        try {
-            os = new FileOutputStream(fname);
-            GpxAdapter gpxAdapter = new GpxAdapter();
-            gpxAdapter.write(os, Collections.singletonList(track));
-        } catch (JAXBException e) {
-            throw new IOException(e);
-        } finally {
-            if (os != null) {
-                os.close();
-            }
-        }
-    }
-
 }
