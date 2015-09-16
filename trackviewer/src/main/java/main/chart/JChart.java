@@ -37,7 +37,7 @@ public class JChart extends JComponent {
     private final List<List<Point2D>> series = new ArrayList<>();
     private final Rectangle chartRect = new Rectangle();
 
-    private int markerPos = -1;
+    private double markerPos = -1;
 
     /**
      *
@@ -50,19 +50,15 @@ public class JChart extends JComponent {
      * @param pos the x position in screen pixel coordinates
      */
     public void setMarker(int pos) {
-        markerPos = -1;
-
         if (pos < chartRect.x) {
-            return;
+            pos = chartRect.x;
         }
 
         if (pos > chartRect.x + chartRect.width) {
-            return;
+            pos = chartRect.x + chartRect.width;
         }
 
-        double val = screenXToValueX(pos);
-
-        markerPos = findIndexOfValueX(val, 0);
+        markerPos = screenXToValueX(pos);
 
         repaint();
     }
@@ -102,15 +98,9 @@ public class JChart extends JComponent {
 
         g.setColor(Color.BLACK);
 
-        List<Point2D> data = series.get(0);
+        int x = (int) ValueXToScreenX(markerPos);
 
-        // If the series has changed, the marker could be invalid
-        if (markerPos < data.size()) {
-            double value = data.get(markerPos).getX();
-            int x = (int) ValueXToScreenX(value);
-
-            g.drawLine(x, yTop, x, yBot);
-        }
+        g.drawLine(x, yTop, x, yBot);
     }
 
     private void updateChartRect() {
@@ -268,7 +258,7 @@ public class JChart extends JComponent {
      */
     public void setData(List<List<Point2D>> data) {
         series.clear();
-
+        
         series.addAll(data);		// does not copy the content
 
         Rectangle2D bounds = null;
