@@ -229,7 +229,7 @@ public class MainFrame extends JFrame {
         
         
         try {
-            OptionSet optionset = op.parse(args);
+            final OptionSet optionset = op.parse(args);
             
             if(optionset.has("help")) {
                 try {
@@ -238,16 +238,24 @@ public class MainFrame extends JFrame {
                 }
                 System.exit(0);
             } else {
-                String tracksdir = null;
+                final String tracksdir;
                 if(optionset.has("tracksdir")) {
                     tracksdir = (String) optionset.valueOf("tracksdir");
                 } else if (optionset.nonOptionArguments().size() > 0) {
                     tracksdir = (String) optionset.nonOptionArguments().get(0);
+                } else {
+                    tracksdir = null;
                 }
-                JFrame frame = new MainFrame(tracksdir, (String) optionset.valueOf("apiKey"));
-                frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-                frame.setSize(1024, 768);
-                frame.setVisible(true);
+                
+                SwingUtilities.invokeLater(new Runnable() {
+                    @Override
+                    public void run() {
+                        JFrame frame = new MainFrame(tracksdir, (String) optionset.valueOf("apiKey"));
+                        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+                        frame.setSize(1024, 768);
+                        frame.setVisible(true);
+                    }
+                });
             }
         } catch (OptionException ex) {
             System.err.println(ex.getMessage());
