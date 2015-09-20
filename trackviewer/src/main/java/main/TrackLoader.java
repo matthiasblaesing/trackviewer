@@ -27,92 +27,106 @@ import com.garmin.xmlschemas.trainingcenterdatabase.v2.TrainingCenterDatabaseT;
  *
  * @author Martin Steiger
  */
-public class TrackLoader {
+public class TrackLoader extends Thread {
 
     private static final Log log = LogFactory.getLog(TrackLoader.class);
-
+    private File folder;
+    private TrackLoadListener cb;
+    
+    private TrackLoader(final File folder, final TrackLoadListener cb) {
+        this.folder = folder;
+        this.cb = cb;
+    }
+    
     /**
      * @param folder the folder that contains the track files
      * @param cb the callback
+     * @return TrackLoader Thread
      */
-    public static void readTracks(final File folder, final TrackLoadListener cb) {
-        Thread th = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                fill(folder, cb);
-            }
-        });
-
-        th.start();
+    public static TrackLoader readTracks(final File folder, final TrackLoadListener cb) {
+        if(cb == null) {
+            throw new NullPointerException("TrackLoadListener must be supplied");
+        }
+        if(cb == null) {
+            throw new NullPointerException("Folder must be supplied");
+        }
+        TrackLoader tl = new TrackLoader(folder, cb);
+        tl.start();
+        return tl;
     }
 
-    private static void fill(File folder, TrackLoadListener cb) {
-        String[] files = folder.list(new FilenameFilter() {
-            @Override
-            public boolean accept(File dir, String name) {
-                return name.endsWith(".tcx") || name.endsWith(".gpx");
-            }
-        });
-
-        TcxAdapter tcxAdapter = null;
-        GpxAdapter gpxAdapter = null;
-
+    @Override
+    public void run() {
         try {
-            tcxAdapter = new TcxAdapter();
-        } catch (JAXBException e) {
-            JOptionPane.showMessageDialog(null, e);
-            log.error("Error initializing TcxAdapter", e);
-            return;
-        }
-        try {
-            gpxAdapter = new GpxAdapter();
-        } catch (JAXBException e) {
-            JOptionPane.showMessageDialog(null, e);
-            log.error("Error initializing GpxAdapter", e);
-            return;
-        }
+            String[] files = folder.list(new FilenameFilter() {
+                @Override
+                public boolean accept(File dir, String name) {
+                    return name.endsWith(".tcx") || name.endsWith(".gpx");
+                }
+            });
 
-        for (String fname : files) {
-            FileInputStream fis = null;
+            TcxAdapter tcxAdapter;
+            GpxAdapter gpxAdapter;
 
             try {
-                fis = new FileInputStream(new File(folder, fname));
-                if (fname.toLowerCase().endsWith(".tcx")) {
-                    TrainingCenterDatabaseT data = tcxAdapter.unmarshallObject(fis);
-                    List<Track> read = tcxAdapter.convertToTracks(data);
+                tcxAdapter = new TcxAdapter();
+            } catch (JAXBException e) {
+                cb.reportError("Error initializing TcxAdapter", e);
+                log.error("Error initializing TcxAdapter", e);
+                return;
+            }
+            try {
+                gpxAdapter = new GpxAdapter();
+            } catch (JAXBException e) {
+                cb.reportError("Error initializing GpxAdapter", e);
+                log.error("Error initializing GpxAdapter", e);
+                return;
+            }
 
-                    for (Track t : read) {
-                        // skip empty tracks
-                        if (!t.getPoints().isEmpty()) {
-                            TrackComputer.repairTrackData(t);
-                            cb.trackLoaded(t);
+            OUTER: for (String fname : files) {
+                try(FileInputStream fis = new FileInputStream(new File(folder, fname))) {
+                    exceptOnInterrupt();
+                    if (fname.toLowerCase().endsWith(".tcx")) {
+                        TrainingCenterDatabaseT data = tcxAdapter.unmarshallObject(fis);
+                        List<Track> read = tcxAdapter.convertToTracks(data);
+
+                        for (Track t : read) {
+                            // skip empty tracks
+                            if (!t.getPoints().isEmpty()) {
+                                TrackComputer.repairTrackData(t);
+                                exceptOnInterrupt();
+                                cb.trackLoaded(t);
+                            }
+                        }
+                    } else if (fname.toLowerCase().endsWith(".gpx")) {
+                        List<Track> read = gpxAdapter.read(fis);
+                        for (Track t : read) {
+                            // skip empty tracks
+                            if (!t.getPoints().isEmpty()) {
+                                TrackComputer.repairTrackData(t);
+                                exceptOnInterrupt();
+                                cb.trackLoaded(t);
+                            }
                         }
                     }
-                } else if (fname.toLowerCase().endsWith(".gpx")) {
-                    List<Track> read = gpxAdapter.read(fis);
-                    for (Track t : read) {
-                        // skip empty tracks
-                        if (!t.getPoints().isEmpty()) {
-                            TrackComputer.repairTrackData(t);
-                            cb.trackLoaded(t);
-                        }
-                    }
-                }
 
-                log.debug("Loaded " + fname);
-            } catch (Exception e) {
-                JOptionPane.showMessageDialog(null, e);
-                log.error(e.getMessage(), e);
-            } finally {
-                try {
-                    if (fis != null) {
-                        fis.close();
-                    }
-                } catch (Exception e) {
-                    // ignore
+                    log.debug("Loaded " + fname);
+                } catch (IOException | JAXBException e) {
+                    String message = String.format("Failed to read '%s'.", fname);
+                    cb.reportError(message, e);
+                    log.error(message, e);
+                } catch (InterruptedException ex) {
+                    break OUTER;
                 }
             }
+        } finally {
+            cb.finished();
         }
-
     }
+    
+    private void exceptOnInterrupt() throws InterruptedException {
+        if(Thread.interrupted()) {
+            throw new InterruptedException();
+    }
+}
 }

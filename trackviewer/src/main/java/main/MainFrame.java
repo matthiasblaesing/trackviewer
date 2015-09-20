@@ -17,6 +17,7 @@ import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
+import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTable;
@@ -35,6 +36,7 @@ import main.actions.ExportTrackAction;
 import main.actions.FixElevationAction;
 import main.actions.InsertGapsAction;
 import main.actions.QuitAction;
+import main.actions.ReloadAction;
 
 import main.chart.StatusBar;
 import main.table.DistanceFormat;
@@ -62,21 +64,52 @@ public class MainFrame extends JFrame {
     private final Action fixElevationAction;
     private final Action insertGapsAction;
     private final Action quitAction;
+    private final Action reloadTracks;
+    private volatile TrackLoader trackLoader;
+    private volatile File tracksdir = null;
 
+    private TrackLoadListener tracklistener = new TrackLoadListener() {
+        @Override
+        public void trackLoaded(final Track track) {
+            SwingUtilities.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    ((TrackTableModel) table.getModel()).addTracks(track);
+                }
+            });
+        }
+
+        @Override
+        public void finished() {
+            setTrackLoader(null); // Marked as safe to be called Off the EDT
+        }
+
+        @Override
+        public void reportError(final String message, final Exception ex) {
+            SwingUtilities.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    StringBuilder sb = new StringBuilder();
+                    if(message != null) {
+                        sb.append(message);
+                    }
+                    if(ex != null) {
+                        if(sb.length() > 0) {
+                            sb.append("\n\n");
+                        }
+                        sb.append(ex.getLocalizedMessage());
+                    }
+                    JOptionPane.showMessageDialog(null, sb.toString());
+                }
+            });
+        }
+    };
+    
     /**
      * Constructs a new instance
      */
     public MainFrame(String tracksdir, String apiKey) {
         super("TrackViewer");
-
-        File folder;
-        
-        if(tracksdir == null) {
-            folder = new File(System.getProperty("user.home") + File.separator
-                + "trackviewer");
-        } else {
-            folder = new File(tracksdir);
-        }
 
         viewer = new MapViewer();
 
@@ -87,18 +120,9 @@ public class MainFrame extends JFrame {
         fixElevationAction = new FixElevationAction(apiKey != null ? apiKey: "", table);
         insertGapsAction = new InsertGapsAction(table);
         quitAction = new QuitAction();
+        reloadTracks = new ReloadAction(this);
         
-        TrackLoader.readTracks(folder, new TrackLoadListener() {
-            @Override
-            public void trackLoaded(final Track track) {
-                SwingUtilities.invokeLater(new Runnable() {
-                    @Override
-                    public void run() {
-                        ((TrackTableModel) table.getModel()).addTracks(track);
-                    }
-                });
-            }
-        });
+        setTracksdir(tracksdir == null ? null : new File(tracksdir));
 
         // put in a scrollpane to add scroll bars
         JScrollPane tablePane = new JScrollPane(table);
@@ -133,6 +157,59 @@ public class MainFrame extends JFrame {
         add(mainSplitPane);
     }
 
+    public void setTracksdir(File tracksdir) {
+        if(tracksdir == null) {
+            this.tracksdir = new File(System.getProperty("user.home") + File.separator + "trackviewer");
+        } else {
+            this.tracksdir = tracksdir;
+        }
+        updateTracks();
+    }
+    
+    public void updateTracks() {
+        if(trackLoader != null) {
+            trackLoader.interrupt();
+        }
+
+        for (int i = 0; i < 100; i++) {
+            if (trackLoader == null) {
+                break;
+            }
+            try {
+                Thread.sleep(50);
+            } catch (InterruptedException ex) {
+                break;
+            }
+        }
+
+        ((TrackTableModel) table.getModel()).clear();
+        trackLoader = TrackLoader.readTracks(tracksdir, tracklistener);
+    }
+    
+    public boolean isLoading() {
+        return trackLoader != null;
+    }
+    
+    /**
+     * Set trackloader - can be called on and off the EDT
+     * 
+     * @param trackloader 
+     */
+    private void setTrackLoader(final TrackLoader trackloader) {
+        final boolean oldValue = isLoading();
+        this.trackLoader = trackloader;
+        Runnable updateOnEDT = new Runnable() {
+            public void run() {
+                MainFrame.this.firePropertyChange("loading", oldValue, isLoading());
+            }
+        };
+        if(SwingUtilities.isEventDispatchThread()) {
+            updateOnEDT.run();
+        } else {
+            SwingUtilities.invokeLater(updateOnEDT);
+        }
+    }
+    
     private JTable createTable() {
         final TrackTableModel model = new TrackTableModel();
 
@@ -195,6 +272,8 @@ public class MainFrame extends JFrame {
         menu.setMnemonic(KeyEvent.VK_F);
         menuBar.add(menu);
 
+        menu.add(reloadTracks);
+        menu.addSeparator();
         menu.add(exportTrackAction);
         menu.addSeparator();
         menu.add(fixElevationAction);
@@ -245,7 +324,7 @@ public class MainFrame extends JFrame {
                     tracksdir = (String) optionset.nonOptionArguments().get(0);
                 } else {
                     tracksdir = null;
-                }
+                }  
                 
                 SwingUtilities.invokeLater(new Runnable() {
                     @Override
