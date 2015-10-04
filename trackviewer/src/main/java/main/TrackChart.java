@@ -235,7 +235,7 @@ public class TrackChart extends JComponent {
                 break;
 
             case Time:
-                x = trackPt.getTime().getTime() / 60000.0;
+                x = trackPt.getRelativeTime() / 60000.0;
                 break;
         }
 

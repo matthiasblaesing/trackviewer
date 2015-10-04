@@ -85,7 +85,7 @@ public class TrackComputer {
 
         for (TrackPoint point : points) {
             long time = point.getTime().getTime();
-            point.getTime().setTime(time - start);
+            point.setRelativeTime(time - start);
         }
 
         track.setStartTime(new Date(start));

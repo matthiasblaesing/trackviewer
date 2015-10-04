@@ -15,6 +15,7 @@ public class TrackPoint {
 
     private Date time;
 
+    private long relativeTime;
     private double elevation;
     private double distance;
     private double speed;
@@ -27,7 +28,7 @@ public class TrackPoint {
         this.time = time;
         this.pos = pos;
     }
-
+ 
     /**
      * @return the pos
      */
@@ -41,7 +42,7 @@ public class TrackPoint {
     public double getElevation() {
         return elevation;
     }
-
+    
     /**
      * @return the time
      */
@@ -91,4 +92,14 @@ public class TrackPoint {
         this.time = time;
     }
 
+    /**
+     * @return milliseconds since track start
+     */
+    public long getRelativeTime() {
+        return relativeTime;
+    }
+
+    public void setRelativeTime(long relativeTime) {
+        this.relativeTime = relativeTime;
+    }
 }
