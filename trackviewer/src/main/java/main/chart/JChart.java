@@ -48,8 +48,9 @@ public class JChart extends JComponent {
 
     /**
      * @param pos the x position in screen pixel coordinates
+     * @return value in value space coordinates
      */
-    public void setMarker(int pos) {
+    public double setMarker(int pos) {
         if (pos < chartRect.x) {
             pos = chartRect.x;
         }
@@ -61,6 +62,8 @@ public class JChart extends JComponent {
         markerPos = screenXToValueX(pos);
 
         repaint();
+        
+        return markerPos;
     }
 
     @Override

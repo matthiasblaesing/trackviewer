@@ -132,8 +132,8 @@ public class MainFrame extends JFrame {
 
         trackChart.addSelectionListener(new SelectionListener() {
             @Override
-            public void selected(int series, int index) {
-                viewer.setMarker(series, index);
+            public void selected(ValueType axis, double value) {
+                viewer.setMarker(axis, value);
             }
         });
 

@@ -8,8 +8,8 @@ package main;
 public interface SelectionListener {
 
     /**
-     * @param series the data series
-     * @param index the index in the series
+     * @param unit axis on which value is selected
+     * @param value selected value (reported in base units (seconds/meters)
      */
-    public void selected(int series, int index);
+    public void selected(ValueType unit, double value);
 }

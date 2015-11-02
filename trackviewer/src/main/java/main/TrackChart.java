@@ -29,18 +29,8 @@ public class TrackChart extends JComponent {
 
     private static final long serialVersionUID = 5779546384127375283L;
 
-    private enum ChartModeVert {
-        Height,
-        Speed,
-    }
-
-    private enum ChartModeHorz {
-        Distance,
-        Time
-    }
-
-    private ChartModeVert chartModeVert = ChartModeVert.Height;
-    private ChartModeHorz chartModeHorz = ChartModeHorz.Distance;
+    private ValueType chartModeVert = ValueType.Height;
+    private ValueType chartModeHorz = ValueType.Distance;
 
     private List<Track> tracks;
     private JChart chart;
@@ -65,14 +55,18 @@ public class TrackChart extends JComponent {
             }
 
             private void select(int x) {
-                chart.setMarker(x);
+                double value = chart.setMarker(x);
 
-                for (int i = 0; i < chart.getData().size(); i++) {
-                    int idx = chart.getIndexAt(i, x);
-
-                    for (SelectionListener sl : selectionListeners) {
-                        sl.selected(i, idx);
-                    }
+                if(chartModeHorz == ValueType.Distance) {
+                    value *= 1000; // value is kilometers, converting to meters
+                } else if (chartModeHorz == ValueType.Time) {
+                    value *= 60 * 1000; // value is minutes, converting to milliseconds
+                } else {
+                    assert false: "Only Distance and Time are eligable for X-Axis";
+                }
+                
+                for (SelectionListener sl : selectionListeners) {
+                    sl.selected(chartModeHorz, value);
                 }
             }
         };
@@ -104,10 +98,10 @@ public class TrackChart extends JComponent {
         speedButton.setToolTipText("Speed");
         timeButton.setToolTipText("Time");
 
-        distanceButton.getModel().setSelected(chartModeHorz == ChartModeHorz.Distance);
-        timeButton.getModel().setSelected(chartModeHorz == ChartModeHorz.Time);
-        heightButton.getModel().setSelected(chartModeVert == ChartModeVert.Height);
-        speedButton.getModel().setSelected(chartModeVert == ChartModeVert.Speed);
+        distanceButton.getModel().setSelected(chartModeHorz == ValueType.Distance);
+        timeButton.getModel().setSelected(chartModeHorz == ValueType.Time);
+        heightButton.getModel().setSelected(chartModeVert == ValueType.Height);
+        speedButton.getModel().setSelected(chartModeVert == ValueType.Speed);
 
         toolBar.addSeparator();
         toolBar.add(distanceButton);
@@ -119,7 +113,7 @@ public class TrackChart extends JComponent {
         distanceButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                chartModeHorz = ChartModeHorz.Distance;
+                chartModeHorz = ValueType.Distance;
                 reload();
             }
         });
@@ -127,7 +121,7 @@ public class TrackChart extends JComponent {
         heightButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                chartModeVert = ChartModeVert.Height;
+                chartModeVert = ValueType.Height;
                 reload();
             }
         });
@@ -135,7 +129,7 @@ public class TrackChart extends JComponent {
         speedButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                chartModeVert = ChartModeVert.Speed;
+                chartModeVert = ValueType.Speed;
                 reload();
             }
         });
@@ -143,7 +137,7 @@ public class TrackChart extends JComponent {
         timeButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                chartModeHorz = ChartModeHorz.Time;
+                chartModeHorz = ValueType.Time;
                 reload();
             }
         });

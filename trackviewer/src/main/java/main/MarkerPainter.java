@@ -11,6 +11,7 @@ import java.util.List;
 import org.jxmapviewer.JXMapViewer;
 import org.jxmapviewer.viewer.GeoPosition;
 import org.jxmapviewer.painter.AbstractPainter;
+import track.TrackPoint;
 
 /**
  * Paints colored markers along the track
@@ -19,7 +20,7 @@ import org.jxmapviewer.painter.AbstractPainter;
  */
 public class MarkerPainter extends AbstractPainter<JXMapViewer> {
 
-    private final List<GeoPosition> track;
+    private final List<TrackPoint> track;
     private final List<Integer> markers = new ArrayList<>();
     private final Color color;
 
@@ -27,7 +28,7 @@ public class MarkerPainter extends AbstractPainter<JXMapViewer> {
      * @param track the track
      * @param color the color
      */
-    public MarkerPainter(List<GeoPosition> track, Color color) {
+    public MarkerPainter(List<TrackPoint> track, Color color) {
         this.track = track;
         this.color = color;
     }
@@ -68,7 +69,7 @@ public class MarkerPainter extends AbstractPainter<JXMapViewer> {
 
     private void draw(Graphics2D g, JXMapViewer map, double len) {
         for (Integer idx : markers) {
-            GeoPosition gp = track.get(idx);
+            GeoPosition gp = track.get(idx).getPos();
             Point2D p = map.convertGeoPositionToPoint(gp);
             Point2D dir = getDirection(idx, map);
 
@@ -98,8 +99,8 @@ public class MarkerPainter extends AbstractPainter<JXMapViewer> {
 
             range++;
 
-            GeoPosition gpHigh = track.get(highBound);
-            GeoPosition gpLow = track.get(lowBound);
+            GeoPosition gpHigh = track.get(highBound).getPos();
+            GeoPosition gpLow = track.get(lowBound).getPos();
 
             Point2D ptHigh = map.convertGeoPositionToPoint(gpHigh);
             Point2D ptLow = map.convertGeoPositionToPoint(gpLow);
@@ -128,7 +129,7 @@ public class MarkerPainter extends AbstractPainter<JXMapViewer> {
      *
      * @return the route
      */
-    public List<GeoPosition> getRoute() {
+    public List<TrackPoint> getRoute() {
         return Collections.unmodifiableList(track);
     }
 }

@@ -23,6 +23,7 @@ import org.jxmapviewer.painter.CompoundPainter;
 import org.jxmapviewer.painter.Painter;
 
 import track.Track;
+import track.TrackPoint;
 
 /**
  * A wrapper for the actual {@link JXMapViewer} component. It connects to the
@@ -96,7 +97,7 @@ public class MapViewer extends JComponent {
             positions.addAll(route);
             Color color = ColorProvider.getMainColor(i++);
 
-            MarkerPainter markerPainter = new MarkerPainter(route, color);
+            MarkerPainter markerPainter = new MarkerPainter(track.getPoints(), color);
             RoutePainter routePainter = new RoutePainter(route, color);
 
             markerPainters.add(markerPainter);
@@ -117,21 +118,46 @@ public class MapViewer extends JComponent {
     }
 
     /**
-     * @param track the track index
-     * @param index the index of the track point
+     * @param unit value type
+     * @param value selected value
      */
-    public void setMarker(int track, int index) {
-        MarkerPainter mp = markerPainters.get(track);
+    public void setMarker(ValueType unit, double value) {
+        for (MarkerPainter mp: markerPainters) {
+            List<TrackPoint> route = mp.getRoute();
+            int minIdx = 0;
+            int maxIdx = route.size() - 1;
 
-        int minIdx = 0;
-        int maxIdx = mp.getRoute().size() - 1;
+            mp.clearMarkers();
+            mp.addMarker(minIdx);
+            mp.addMarker(maxIdx);
 
-        mp.clearMarkers();
-        mp.addMarker(minIdx);
-        mp.addMarker(maxIdx);
-
-        if (index > minIdx && index < maxIdx) {
-            mp.addMarker(index);
+            if (unit == ValueType.Time || unit == ValueType.Distance) {
+                for (int i = 1; i < (route.size() - 1); i++) {
+                    double pointVal = Double.NaN;
+                    double previousVal = Double.MIN_VALUE;
+                    if (unit == ValueType.Time) {
+                        pointVal = route.get(i).getRelativeTime();
+                        previousVal = route.get(i - 1).getRelativeTime();
+                    } else if (unit == ValueType.Distance) {
+                        pointVal = route.get(i).getDistance();
+                        previousVal = route.get(i - 1).getDistance();
+                    }
+                    
+                    if (pointVal >= value) {
+                        double distPrev = value - previousVal;
+                        double distNext = pointVal - value;
+                        if (distNext > distPrev) {
+                            if(i > 0) {
+                                mp.addMarker(i - 1);
+                            }
+                            break;
+                        } else if (distPrev >= distNext) {
+                            mp.addMarker(i);
+                            break;
+                        }
+                    }
+                }
+            }
         }
     }
 
