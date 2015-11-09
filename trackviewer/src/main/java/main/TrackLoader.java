@@ -91,22 +91,16 @@ public class TrackLoader extends Thread {
                         List<Track> read = tcxAdapter.convertToTracks(data);
 
                         for (Track t : read) {
-                            // skip empty tracks
-                            if (!t.getPoints().isEmpty()) {
-                                TrackComputer.repairTrackData(t);
-                                exceptOnInterrupt();
-                                cb.trackLoaded(t);
-                            }
+                            TrackComputer.repairTrackData(t);
+                            exceptOnInterrupt();
+                            cb.trackLoaded(t);
                         }
                     } else if (fname.toLowerCase().endsWith(".gpx")) {
                         List<Track> read = gpxAdapter.read(fis);
                         for (Track t : read) {
-                            // skip empty tracks
-                            if (!t.getPoints().isEmpty()) {
-                                TrackComputer.repairTrackData(t);
-                                exceptOnInterrupt();
-                                cb.trackLoaded(t);
-                            }
+                            TrackComputer.repairTrackData(t);
+                            exceptOnInterrupt();
+                            cb.trackLoaded(t);
                         }
                     }
 

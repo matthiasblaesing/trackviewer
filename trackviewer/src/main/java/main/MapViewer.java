@@ -24,6 +24,7 @@ import org.jxmapviewer.painter.Painter;
 
 import track.Track;
 import track.TrackPoint;
+import track.TrackSegment;
 
 /**
  * A wrapper for the actual {@link JXMapViewer} component. It connects to the
@@ -93,21 +94,24 @@ public class MapViewer extends JComponent {
 
         int i = 0;
         for (Track track : tracks) {
-            List<GeoPosition> route = track.getRoute();
-            positions.addAll(route);
             Color color = ColorProvider.getMainColor(i++);
+            
+            for (TrackSegment ts : track.getSegments()) {
+                List<GeoPosition> route = ts.getRoute();
+                positions.addAll(route);    
 
-            MarkerPainter markerPainter = new MarkerPainter(track.getPoints(), color);
-            RoutePainter routePainter = new RoutePainter(route, color);
+                MarkerPainter markerPainter = new MarkerPainter(ts.getPoints(), color);
+                RoutePainter routePainter = new RoutePainter(route, color);
 
-            markerPainters.add(markerPainter);
-            routePainters.add(routePainter);
+                markerPainters.add(markerPainter);
+                routePainters.add(routePainter);
 
-            markerPainter.addMarker(0);
-            markerPainter.addMarker(route.size() - 1);
+                markerPainter.addMarker(0);
+                markerPainter.addMarker(route.size() - 1);
 
-            painters.add(routePainter);
-            painters.add(markerPainter);
+                painters.add(routePainter);
+                painters.add(markerPainter);
+            }
         }
 
         painter.setPainters(painters);

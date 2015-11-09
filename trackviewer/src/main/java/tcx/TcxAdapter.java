@@ -24,6 +24,7 @@ import com.garmin.xmlschemas.trainingcenterdatabase.v2.PositionT;
 import com.garmin.xmlschemas.trainingcenterdatabase.v2.TrackT;
 import com.garmin.xmlschemas.trainingcenterdatabase.v2.TrackpointT;
 import com.garmin.xmlschemas.trainingcenterdatabase.v2.TrainingCenterDatabaseT;
+import track.TrackSegment;
 
 /**
  * Reads track data from .tcx files
@@ -62,7 +63,8 @@ public class TcxAdapter {
         for (ActivityT activity : tcx.getActivities().getActivity()) {
             for (ActivityLapT lap : activity.getLap()) {
                 Track track = new Track();
-
+                TrackSegment tracksegment = new TrackSegment();
+                
                 for (TrackT trk : lap.getTrack()) {
 
                     for (TrackpointT pt : trk.getTrackpoint()) {
@@ -81,11 +83,12 @@ public class TcxAdapter {
                             }
 
                             tp.setElevation(ele);
-                            track.addPoint(tp);
+                            tracksegment.addPoint(tp);
                         }
                     }
 
                 }
+                track.addSegment(tracksegment);
                 list.add(track);
             }
         }

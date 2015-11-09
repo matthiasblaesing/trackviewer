@@ -26,6 +26,7 @@ import com.topografix.gpx._1._1.ObjectFactory;
 import com.topografix.gpx._1._1.TrkType;
 import com.topografix.gpx._1._1.TrksegType;
 import com.topografix.gpx._1._1.WptType;
+import track.TrackSegment;
 
 /**
  * Reads track data from .gpx files
@@ -69,12 +70,12 @@ public class GpxAdapter {
 
         ArrayList<Track> list = new ArrayList<>();
 
-        int trackCount = 1;
-
         for (TrkType trk : gpx.getTrk()) {
+            Track track = new Track();
+            track.setName(trk.getName());
+            
             for (TrksegType seg : trk.getTrkseg()) {
-                Track track = new Track();
-                track.setName(trk.getName() + " #" + trackCount);
+                TrackSegment ts = new TrackSegment();
 
                 for (WptType pt : seg.getTrkpt()) {
                     double ele;
@@ -89,17 +90,15 @@ public class GpxAdapter {
                     GeoPosition pos = new GeoPosition(lat, lon);
 
                     TrackPoint tp = new TrackPoint(pos, cal.getTime());
-                    if (track.getStartTime() == null) {
-                        track.setStartTime(cal.getTime());
-                    }
 
                     tp.setElevation(ele);
-                    track.addPoint(tp);
+                    ts.addPoint(tp);
                 }
 
-                list.add(track);
-                trackCount++;
+                track.addSegment(ts);
             }
+            
+            list.add(track);
         }
 
         return list;
@@ -129,23 +128,26 @@ public class GpxAdapter {
 
         for (Track track : tracks) {
             TrkType trk = new TrkType();
-            TrksegType seg = new TrksegType();
+            
+            for (TrackSegment tracksegment : track.getSegments()) {
+                TrksegType seg = new TrksegType();
 
-            for (TrackPoint pt : track.getPoints()) {
-                WptType wpt = new WptType();
+                for (TrackPoint pt : tracksegment.getPoints()) {
+                    WptType wpt = new WptType();
 
-                wpt.setLat(BigDecimal.valueOf(pt.getPos().getLatitude()));
-                wpt.setLon(BigDecimal.valueOf(pt.getPos().getLongitude()));
-                wpt.setEle(BigDecimal.valueOf(pt.getElevation()));
+                    wpt.setLat(BigDecimal.valueOf(pt.getPos().getLatitude()));
+                    wpt.setLon(BigDecimal.valueOf(pt.getPos().getLongitude()));
+                    wpt.setEle(BigDecimal.valueOf(pt.getElevation()));
 
-                GregorianCalendar cal = new GregorianCalendar();
-                cal.setTime(pt.getTime());
-                wpt.setTime(factory.newXMLGregorianCalendar(cal));
+                    GregorianCalendar cal = new GregorianCalendar();
+                    cal.setTime(pt.getTime());
+                    wpt.setTime(factory.newXMLGregorianCalendar(cal));
 
-                seg.getTrkpt().add(wpt);
+                    seg.getTrkpt().add(wpt);
+                }
+                trk.getTrkseg().add(seg);
             }
-
-            trk.getTrkseg().add(seg);
+            
             gpx.getTrk().add(trk);
         }
 

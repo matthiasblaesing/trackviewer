@@ -14,27 +14,10 @@ import org.jxmapviewer.viewer.GeoPosition;
  * @author Martin Steiger
  */
 public class Track {
-
-    private final List<TrackPoint> points = new ArrayList<>();
-    private final List<Waypoint> waypoints = new ArrayList<>();
-
-    private List<GeoPosition> route = new AbstractList<GeoPosition>() {
-        @Override
-        public GeoPosition get(int index) {
-            return points.get(index).getPos();
-        }
-
-        @Override
-        public int size() {
-            return points.size();
-        }
-
-    };
-
+    private List<TrackSegment> segments = new ArrayList<>();
+    
     private String name;
     private String comments;
-    private Date startTime;
-    private Double altDiff;
 
     /**
      * Default constructor (no name set)
@@ -42,41 +25,14 @@ public class Track {
     public Track() {
     }
 
-    /**
-     * @return an unmodifiable list of geo-positions
-     */
-    public List<GeoPosition> getRoute() {
-        return route;		// read-only anyway
+    public void addSegment(TrackSegment segment) {
+        segments.add(segment);
     }
-
-    /**
-     * @return an unmodifiable list of track points
-     */
-    public List<TrackPoint> getPoints() {
-        return Collections.unmodifiableList(points);
+    
+    public List<TrackSegment> getSegments()  {
+        return Collections.unmodifiableList(segments);
     }
-
-    /**
-     * @param point the track point
-     */
-    public void addPoint(TrackPoint point) {
-        points.add(point);
-    }
-
-    /**
-     * @param point the waypoint
-     */
-    public void addWaypoint(Waypoint point) {
-        waypoints.add(point);
-    }
-
-    /**
-     * @return an unmodifiable list of waypoints
-     */
-    public List<Waypoint> getWaypoints() {
-        return Collections.unmodifiableList(waypoints);
-    }
-
+    
     /**
      * @return the name
      */
@@ -89,90 +45,12 @@ public class Track {
     }
 
     /**
-     * @return the average speed in km/h
-     */
-    public double getAverageSpeed() {
-        double sum = 0;
-        for (TrackPoint point : points) {
-            sum += point.getSpeed();
-        }
-
-        return sum / points.size();
-    }
-
-    /**
-     * @param startTime the start time the track
-     */
-    public void setStartTime(Date startTime) {
-        this.startTime = startTime;
-    }
-
-    /**
-     * @return the start time the track
-     */
-    public Date getStartTime() {
-        return startTime;
-    }
-
-    /**
-     * @return the accumulated (ascending) elevation difference
-     */
-    public double getTotalElevationDifference() {
-        if (points.isEmpty()) {
-            return 0;
-        }
-
-        if (altDiff == null) {
-            double total = 0;
-
-            double prevEle = points.get(0).getElevation();
-
-            for (TrackPoint pt : points) {
-                double ele = pt.getElevation();
-                double delta = ele - prevEle;
-
-                if (delta > 0) {
-                    total += delta;
-                }
-
-                prevEle = ele;
-            }
-
-            altDiff = total;
-        }
-
-        return altDiff;
-    }
-
-    /**
-     * @return the total distance of the track in meters
-     */
-    public double getTotalDistance() {
-        if (points.isEmpty()) {
-            return 0;
-        }
-
-        return points.get(points.size() - 1).getDistance();
-    }
-
-    /**
-     * @return the total time of the track
-     */
-    public long getTotalTime() {
-        if (points.size() < 2) {
-            return 0;
-        }
-        return points.get(points.size() - 1).getTime().getTime()
-                - points.get(0).getTime().getTime();
-    }
-
-    /**
      * @return the comments
      */
     public String getComments() {
         return comments;
     }
-
+    
     /**
      * @param comments the comments to set
      */
@@ -180,4 +58,53 @@ public class Track {
         this.comments = comments;
     }
 
+    /**
+     * @return the average speed in km/h
+     */
+    public double getAverageSpeed() {
+        return getTotalDistance() / getTotalTime() * 3600;
+    }
+    
+    /**
+     * @return the accumulated (ascending) elevation difference for the track
+     */
+    public double getTotalElevationDifference() {
+        double result = 0;
+        for (TrackSegment ts : segments) {
+            result += ts.getTotalElevationDifference();
+        }
+        return result;
+    }
+    
+    /**
+     * @return the total distance of the track in meters
+     */
+    public double getTotalDistance() {
+        double result = 0;
+        for(TrackSegment ts: segments) {
+            result += ts.getTotalDistance();
+        }
+        return result;
+    }
+    
+    /**
+     * @return the total time of the track (in ms)
+     */
+    public long getTotalTime() {
+        long result = 0;
+        for(TrackSegment ts: segments) {
+            result += ts.getTotalTime();
+        }
+        return result;
+    }
+    
+    public Date getStartTime() {
+        for(TrackSegment ts: segments) {
+            Date startTime = ts.getStartTime();
+            if(startTime != null) {
+                return startTime;
+            }
+        }
+        return null;
+    }
 }

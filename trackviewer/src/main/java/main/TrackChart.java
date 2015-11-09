@@ -19,6 +19,7 @@ import javax.swing.JToolBar;
 import main.chart.JChart;
 import track.Track;
 import track.TrackPoint;
+import track.TrackSegment;
 
 /**
  * The chart component as well as a toolbar to configure it.
@@ -176,8 +177,10 @@ public class TrackChart extends JComponent {
         for (Track track : tracks) {
             List<Point2D> pts = new ArrayList<>();
 
-            for (TrackPoint trackPt : track.getPoints()) {
-                pts.add(chartPointFromTrackPoint(trackPt));
+            for (TrackSegment ts : track.getSegments()) {
+                for (TrackPoint trackPt : ts.getPoints()) {
+                    pts.add(chartPointFromTrackPoint(trackPt));
+                }
             }
 
             data.add(pts);
