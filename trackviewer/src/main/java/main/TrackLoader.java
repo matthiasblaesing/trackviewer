@@ -83,34 +83,36 @@ public class TrackLoader extends Thread {
                 return;
             }
 
-            OUTER: for (String fname : files) {
-                try(FileInputStream fis = new FileInputStream(new File(folder, fname))) {
-                    exceptOnInterrupt();
-                    if (fname.toLowerCase().endsWith(".tcx")) {
-                        TrainingCenterDatabaseT data = tcxAdapter.unmarshallObject(fis);
-                        List<Track> read = tcxAdapter.convertToTracks(data);
+            if (files != null) {
+                for (String fname : files) {
+                    try (FileInputStream fis = new FileInputStream(new File(folder, fname))) {
+                        exceptOnInterrupt();
+                        if (fname.toLowerCase().endsWith(".tcx")) {
+                            TrainingCenterDatabaseT data = tcxAdapter.unmarshallObject(fis);
+                            List<Track> read = tcxAdapter.convertToTracks(data);
 
-                        for (Track t : read) {
-                            TrackComputer.repairTrackData(t);
-                            exceptOnInterrupt();
-                            cb.trackLoaded(t);
+                            for (Track t : read) {
+                                TrackComputer.repairTrackData(t);
+                                exceptOnInterrupt();
+                                cb.trackLoaded(t);
+                            }
+                        } else if (fname.toLowerCase().endsWith(".gpx")) {
+                            List<Track> read = gpxAdapter.read(fis);
+                            for (Track t : read) {
+                                TrackComputer.repairTrackData(t);
+                                exceptOnInterrupt();
+                                cb.trackLoaded(t);
+                            }
                         }
-                    } else if (fname.toLowerCase().endsWith(".gpx")) {
-                        List<Track> read = gpxAdapter.read(fis);
-                        for (Track t : read) {
-                            TrackComputer.repairTrackData(t);
-                            exceptOnInterrupt();
-                            cb.trackLoaded(t);
-                        }
+
+                        log.debug("Loaded " + fname);
+                    } catch (IOException | JAXBException e) {
+                        String message = String.format("Failed to read '%s'.", fname);
+                        cb.reportError(message, e);
+                        log.error(message, e);
+                    } catch (InterruptedException ex) {
+                        break;
                     }
-
-                    log.debug("Loaded " + fname);
-                } catch (IOException | JAXBException e) {
-                    String message = String.format("Failed to read '%s'.", fname);
-                    cb.reportError(message, e);
-                    log.error(message, e);
-                } catch (InterruptedException ex) {
-                    break OUTER;
                 }
             }
         } finally {
