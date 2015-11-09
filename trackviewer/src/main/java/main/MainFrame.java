@@ -34,7 +34,6 @@ import joptsimple.OptionSet;
 import main.actions.AutomaticZoom;
 import main.actions.ExportTrackAction;
 import main.actions.FixElevationAction;
-import main.actions.InsertGapsAction;
 import main.actions.QuitAction;
 import main.actions.ReloadAction;
 
@@ -62,7 +61,6 @@ public class MainFrame extends JFrame {
     private final Action automaticZoomAction;
     private final Action exportTrackAction;
     private final Action fixElevationAction;
-    private final Action insertGapsAction;
     private final Action quitAction;
     private final Action reloadTracks;
     private volatile TrackLoader trackLoader;
@@ -118,7 +116,6 @@ public class MainFrame extends JFrame {
         automaticZoomAction = new AutomaticZoom(viewer);
         exportTrackAction = new ExportTrackAction(table);
         fixElevationAction = new FixElevationAction(apiKey != null ? apiKey: "", table);
-        insertGapsAction = new InsertGapsAction(table);
         quitAction = new QuitAction();
         reloadTracks = new ReloadAction(this);
         
@@ -277,7 +274,6 @@ public class MainFrame extends JFrame {
         menu.add(exportTrackAction);
         menu.addSeparator();
         menu.add(fixElevationAction);
-        menu.add(insertGapsAction);
         menu.addSeparator();
         menu.add(quitAction);
         
