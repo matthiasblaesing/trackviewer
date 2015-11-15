@@ -106,9 +106,6 @@ public class MapViewer extends JComponent {
                 markerPainters.add(markerPainter);
                 routePainters.add(routePainter);
 
-                markerPainter.addMarker(0);
-                markerPainter.addMarker(route.size() - 1);
-
                 painters.add(routePainter);
                 painters.add(markerPainter);
             }
@@ -127,14 +124,26 @@ public class MapViewer extends JComponent {
      */
     public void setMarker(ValueType unit, double value) {
         for (MarkerPainter mp: markerPainters) {
-            List<TrackPoint> route = mp.getRoute();
-            int minIdx = 0;
-            int maxIdx = route.size() - 1;
-
             mp.clearMarkers();
-            mp.addMarker(minIdx);
-            mp.addMarker(maxIdx);
 
+            List<TrackPoint> route = mp.getRoute();
+
+            if(route.isEmpty()) {
+                continue;
+            }
+            
+            if (unit == ValueType.Time) {
+                double startVal = route.get(0).getRelativeTime();
+                if(value < startVal) {
+                    continue;
+                }
+            } else if (unit == ValueType.Distance) {
+                double startVal = route.get(0).getDistance();
+                if (value < startVal) {
+                    continue;
+                }
+            }
+            
             if (unit == ValueType.Time || unit == ValueType.Distance) {
                 for (int i = 1; i < (route.size() - 1); i++) {
                     double pointVal = Double.NaN;
@@ -151,9 +160,7 @@ public class MapViewer extends JComponent {
                         double distPrev = value - previousVal;
                         double distNext = pointVal - value;
                         if (distNext > distPrev) {
-                            if(i > 0) {
-                                mp.addMarker(i - 1);
-                            }
+                            mp.addMarker(i - 1);
                             break;
                         } else if (distPrev >= distNext) {
                             mp.addMarker(i);
