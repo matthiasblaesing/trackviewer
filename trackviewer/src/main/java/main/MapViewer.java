@@ -4,6 +4,7 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -26,6 +27,7 @@ import track.Track;
 import track.TrackCollection;
 import track.TrackPoint;
 import track.TrackSegment;
+import track.Waypoint;
 
 /**
  * A wrapper for the actual {@link JXMapViewer} component. It connects to the
@@ -91,11 +93,12 @@ public class MapViewer extends JComponent {
         routePainters.clear();
 
         Set<GeoPosition> positions = new HashSet<>();
-        List<Painter<JXMapViewer>> painters = new ArrayList<>();
 
         int i = 0;
         
         for (TrackCollection tc : tracks) {
+            List<Waypoint> waypoints = new ArrayList<>(tc.getWaypoints());
+            
             for (Track track : tc.getTracks()) {
                 Color color = ColorProvider.getMainColor(i++);
 
@@ -103,18 +106,20 @@ public class MapViewer extends JComponent {
                     List<GeoPosition> route = ts.getRoute();
                     positions.addAll(route);
 
-                    MarkerPainter markerPainter = new MarkerPainter(ts.getPoints(), color);
+                    MarkerPainter markerPainter = new MarkerPainter(ts.getPoints(), waypoints, color);
                     RoutePainter routePainter = new RoutePainter(route, color);
 
                     markerPainters.add(markerPainter);
                     routePainters.add(routePainter);
-
-                    painters.add(routePainter);
-                    painters.add(markerPainter);
+                    
+                    waypoints = Collections.EMPTY_LIST;
                 }
             }
         }
 
+        List<Painter<JXMapViewer>> painters = new ArrayList<>();
+        painters.addAll(routePainters);
+        painters.addAll(markerPainters);
         painter.setPainters(painters);
         
         if(fitViewportOnChange) {

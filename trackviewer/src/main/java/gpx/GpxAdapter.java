@@ -28,6 +28,7 @@ import com.topografix.gpx._1._1.TrksegType;
 import com.topografix.gpx._1._1.WptType;
 import track.TrackCollection;
 import track.TrackSegment;
+import track.Waypoint;
 
 /**
  * Reads track data from .gpx files
@@ -105,6 +106,18 @@ public class GpxAdapter {
             }
             
             trackCollection.addTrack(track);
+        }
+        
+        for(WptType wpt: gpx.getWpt()) {
+            Waypoint wp = new Waypoint(new GeoPosition(wpt.getLat().doubleValue(), wpt.getLon().doubleValue()));
+            wp.setName(wpt.getName());
+            try {
+                wp.setElevation(wpt.getEle().doubleValue());
+            } catch (NullPointerException ex) {
+                wp.setElevation(Double.NaN);
+            }
+            wp.setDescription(wpt.getDesc());
+            trackCollection.addWaypoint(wp);
         }
 
         return trackCollection;

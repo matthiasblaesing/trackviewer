@@ -7,16 +7,18 @@ import org.jxmapviewer.viewer.GeoPosition;
  *
  * @author Martin Steiger
  */
-public class Waypoint extends TrackPoint {
+public class Waypoint {
 
     private String name;
     private String description;
+    private double elevation;
+    private final GeoPosition pos;
 
     /**
      * @param pos the position
      */
     public Waypoint(GeoPosition pos) {
-        super(pos, null);
+        this.pos = pos;
     }
 
     /**
@@ -47,4 +49,15 @@ public class Waypoint extends TrackPoint {
         this.description = description;
     }
 
+    public double getElevation() {
+        return elevation;
+    }
+
+    public void setElevation(double elevation) {
+        this.elevation = elevation;
+    }
+    
+    public GeoPosition getPos() {
+        return pos;
+    }
 }

@@ -3,15 +3,21 @@ package main;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics2D;
+import java.awt.Image;
 import java.awt.geom.Point2D;
+import java.awt.image.BufferedImage;
+import java.awt.image.WritableRaster;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import javax.imageio.ImageIO;
 
 import org.jxmapviewer.JXMapViewer;
 import org.jxmapviewer.viewer.GeoPosition;
 import org.jxmapviewer.painter.AbstractPainter;
 import track.TrackPoint;
+import track.Waypoint;
 
 /**
  * Paints colored markers along the track
@@ -19,8 +25,24 @@ import track.TrackPoint;
  * @author Martin Steiger
  */
 public class MarkerPainter extends AbstractPainter<JXMapViewer> {
-
+    private static BufferedImage baseIcon;
+    
+    private synchronized static BufferedImage loadBaseIcon() {
+        if(baseIcon == null) {
+            try {
+                baseIcon = ImageIO.read(MarkerPainter.class.getResource("/images/location-icon.png"));
+            } catch (IOException ex) {
+                throw new IllegalStateException("Can't load location-icon.png", ex);
+            }
+        }
+        
+        return baseIcon;
+    }
+    
+    private BufferedImage icon;
+            
     private final List<TrackPoint> track;
+    private final List<Waypoint> waypoints;
     private final List<Integer> markers = new ArrayList<>();
     private final Color color;
 
@@ -29,10 +51,43 @@ public class MarkerPainter extends AbstractPainter<JXMapViewer> {
      * @param color the color
      */
     public MarkerPainter(List<TrackPoint> track, Color color) {
-        this.track = track;
+        this(track, Collections.EMPTY_LIST, color);
+    }
+    
+    public MarkerPainter(List<TrackPoint> track, List<Waypoint> waypoints, Color color) {
         this.color = color;
+        this.track = track;
+        this.waypoints = waypoints;
     }
 
+    private BufferedImage getIcon() {
+        if (this.icon == null) {
+            BufferedImage image = loadBaseIcon();
+            
+            BufferedImage newIcon = new BufferedImage(image.getWidth(), image.getHeight(), image.getType());
+
+            newIcon.createGraphics().drawImage(image, 0, 0, null);
+
+            int width = newIcon.getWidth();
+            int height = newIcon.getHeight();
+            WritableRaster raster = newIcon.getRaster();
+
+            for (int xx = 0; xx < width; xx++) {
+                for (int yy = 0; yy < height; yy++) {
+                    int[] pixels = raster.getPixel(xx, yy, (int[]) null);
+                    pixels[0] = Math.max(pixels[0] - (255 - color.getRed()), 0);
+                    pixels[1] = Math.max(pixels[1] - (255 - color.getGreen()), 0);
+                    pixels[2] = Math.max(pixels[2] - (255 - color.getBlue()), 0);
+                    raster.setPixel(xx, yy, pixels);
+                }
+            }
+
+            this.icon = newIcon;
+        }
+        
+        return this.icon;
+    }
+    
     /**
      * Clears all markers
      */
@@ -65,6 +120,20 @@ public class MarkerPainter extends AbstractPainter<JXMapViewer> {
         g.setStroke(new BasicStroke(width + 2));
 
         draw(g, map, 5 * width);
+        
+        if (!waypoints.isEmpty()) {
+            Image drawIcon = getIcon();
+            int iconWidth = drawIcon.getWidth(null);
+            int iconHeight = drawIcon.getHeight(null);
+            for (Waypoint wp : waypoints) {
+                Point2D p = map.convertGeoPositionToPoint(wp.getPos());
+                g.drawImage(
+                        drawIcon,
+                        (int) p.getX() - (iconWidth / 2),
+                        (int) p.getY() - iconHeight, 
+                        null);
+            }
+        }
     }
 
     private void draw(Graphics2D g, JXMapViewer map, double len) {
