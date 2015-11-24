@@ -7,8 +7,9 @@ import java.util.List;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jxmapviewer.viewer.GeoPosition;
-
 import track.Track;
+
+import track.TrackCollection;
 import track.TrackPoint;
 import track.TrackSegment;
 
@@ -28,16 +29,18 @@ public class TrackElevationFixer {
     }
     
     /**
-     * @param track the track to fix
+     * @param trackCollection the track to fix
      */
-    public void fixTrack(Track track) {
+    public void fixTrack(TrackCollection trackCollection) {
         try {
             List<GeoPosition> positions = new ArrayList<>();
             List<TrackPoint> points = new ArrayList<>();
             
-            for(TrackSegment ts: track.getSegments()) {
-                positions.addAll(ts.getRoute());
-                points.addAll(ts.getPoints());
+            for (Track track : trackCollection.getTracks()) {
+                for (TrackSegment ts : track.getSegments()) {
+                    positions.addAll(ts.getRoute());
+                    points.addAll(ts.getPoints());
+                }
             }
             
             List<Double> elevations = elevationFixer.getElevations(positions);
@@ -53,7 +56,7 @@ public class TrackElevationFixer {
 
             log.info("Updated " + points.size() + " elevations");
         } catch (IOException e) {
-            log.error("Error converting " + track, e);
+            log.error("Error converting " + trackCollection, e);
         }
     }
 

@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   id="svg4081"
+   viewBox="0 0 545 544.99999"
+   version="1.1"
+   inkscape:version="0.91 r13725"
+   sodipodi:docname="location-icon.svg"
+   width="545"
+   height="545">
+  <sodipodi:namedview
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1"
+     objecttolerance="10"
+     gridtolerance="10"
+     guidetolerance="10"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:window-width="1920"
+     inkscape:window-height="1023"
+     id="namedview19"
+     showgrid="false"
+     inkscape:zoom="0.67252752"
+     inkscape:cx="383.95689"
+     inkscape:cy="469.28608"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg4081" />
+  <defs
+     id="defs4083">
+    <filter
+       id="filter4037"
+       height="1.2421"
+       width="1.0798"
+       y="-0.12104"
+       x="-0.039886001"
+       style="color-interpolation-filters:sRGB">
+      <feGaussianBlur
+         id="feGaussianBlur4039"
+         stdDeviation="11.868751" />
+    </filter>
+  </defs>
+  <path
+     style="fill:none"
+     inkscape:connector-curvature="0"
+     d="m 674.75514,286.12984 62.933,230.64 c 0.0643,0.2358 -0.23656,0.4411 -0.53041,0.4411 l -708.939996,0 c -0.29385,0 -0.59221,-0.2046 -0.53041,-0.4411 l 62.067,-230.64 z"
+     id="path3861" />
+  <path
+     style="fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:10.39338589"
+     inkscape:connector-curvature="0"
+     d="m 272.492,5.1990223 c -99.47587,0 -179.795306,80.3606597 -179.795306,179.4798177 0,31.16687 7.968156,60.49087 21.936206,86.04118 L 272.5,534.86786 430.3671,270.72002 c 13.96786,-25.55031 21.93621,-54.87431 21.93621,-86.04118 C 452.30331,85.555682 371.98187,5.1990223 272.508,5.1990223 Z M 270.49216,109.50499 c 0.66735,-0.0169 1.32839,0 1.99984,0 42.97149,0 77.80564,34.81663 77.80564,77.76526 0,42.94864 -34.83515,77.76426 -77.80564,77.76426 -42.97149,0 -77.80564,-34.81662 -77.80564,-77.76426 0,-42.27704 33.76324,-76.69992 75.8058,-77.76526 z"
+     id="path4043" />
+  <metadata
+     id="metadata17">
+    <rdf:RDF>
+      <cc:Work>
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <cc:license
+           rdf:resource="http://creativecommons.org/publicdomain/zero/1.0/" />
+        <dc:publisher>
+          <cc:Agent
+             rdf:about="http://openclipart.org/">
+            <dc:title>Openclipart</dc:title>
+          </cc:Agent>
+        </dc:publisher>
+        <dc:title></dc:title>
+        <dc:date>2013-04-16T08:39:00</dc:date>
+        <dc:description />
+        <dc:source>https://openclipart.org/detail/177208/map-location-by-snodnipper-177208</dc:source>
+        <dc:creator>
+          <cc:Agent>
+            <dc:title>snodnipper</dc:title>
+          </cc:Agent>
+        </dc:creator>
+        <dc:subject>
+          <rdf:Bag>
+            <rdf:li>location</rdf:li>
+            <rdf:li>map</rdf:li>
+            <rdf:li>pin</rdf:li>
+            <rdf:li>pinpoint</rdf:li>
+            <rdf:li>point</rdf:li>
+            <rdf:li>pointer</rdf:li>
+          </rdf:Bag>
+        </dc:subject>
+      </cc:Work>
+      <cc:License
+         rdf:about="http://creativecommons.org/publicdomain/zero/1.0/">
+        <cc:permits
+           rdf:resource="http://creativecommons.org/ns#Reproduction" />
+        <cc:permits
+           rdf:resource="http://creativecommons.org/ns#Distribution" />
+        <cc:permits
+           rdf:resource="http://creativecommons.org/ns#DerivativeWorks" />
+      </cc:License>
+    </rdf:RDF>
+  </metadata>
+</svg>

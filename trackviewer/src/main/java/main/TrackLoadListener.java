@@ -1,6 +1,6 @@
 package main;
 
-import track.Track;
+import track.TrackCollection;
 
 /**
  * A notification callback for loaded tracks.
@@ -14,7 +14,7 @@ public interface TrackLoadListener {
     /**
      * @param track the track
      */
-    public void trackLoaded(Track track);
+    public void trackLoaded(TrackCollection track);
 
     /**
      * Called after all available tracks are read and the last trackLoaded call returns

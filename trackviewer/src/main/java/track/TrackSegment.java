@@ -10,7 +10,6 @@ import org.jxmapviewer.viewer.GeoPosition;
 
 public class TrackSegment {
     private final List<TrackPoint> points = new ArrayList<>();
-    private final List<Waypoint> waypoints = new ArrayList<>();
 
     private final List<GeoPosition> route = new AbstractList<GeoPosition>() {
         @Override
@@ -47,22 +46,6 @@ public class TrackSegment {
     public void addPoint(TrackPoint point) {
         points.add(point);
     }
-
-    /**
-     * @param point the waypoint
-     */
-    public void addWaypoint(Waypoint point) {
-        waypoints.add(point);
-    }
-
-    /**
-     * @return an unmodifiable list of waypoints
-     */
-    public List<Waypoint> getWaypoints() {
-        return Collections.unmodifiableList(waypoints);
-    }
-
-
 
     /**
      * @return the average speed in km/h

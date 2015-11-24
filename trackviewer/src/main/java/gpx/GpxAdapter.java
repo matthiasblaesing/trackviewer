@@ -26,6 +26,7 @@ import com.topografix.gpx._1._1.ObjectFactory;
 import com.topografix.gpx._1._1.TrkType;
 import com.topografix.gpx._1._1.TrksegType;
 import com.topografix.gpx._1._1.WptType;
+import track.TrackCollection;
 import track.TrackSegment;
 
 /**
@@ -60,7 +61,7 @@ public class GpxAdapter {
      * @return the track data
      * @throws IOException if the data cannot be read
      */
-    public List<Track> read(InputStream is) throws IOException {
+    public TrackCollection read(InputStream is) throws IOException {
         GpxType gpx;
         try {
             gpx = unmarshallObject(is);
@@ -68,8 +69,13 @@ public class GpxAdapter {
             throw new IOException("Error parsing inputstream", e);
         }
 
-        ArrayList<Track> list = new ArrayList<>();
-
+        TrackCollection trackCollection = new TrackCollection();
+        
+        try {
+            trackCollection.setName(gpx.getMetadata().getName());
+        } catch (NullPointerException ex) {
+        }
+        
         for (TrkType trk : gpx.getTrk()) {
             Track track = new Track();
             track.setName(trk.getName());
@@ -98,10 +104,10 @@ public class GpxAdapter {
                 track.addSegment(ts);
             }
             
-            list.add(track);
+            trackCollection.addTrack(track);
         }
 
-        return list;
+        return trackCollection;
     }
 
     private GpxType unmarshallObject(InputStream is) throws JAXBException {
@@ -116,7 +122,7 @@ public class GpxAdapter {
      * @param tracks the list of tracks
      * @throws IOException if the data cannot be read
      */
-    public void write(OutputStream os, List<Track> tracks) throws IOException {
+    public void write(OutputStream os, TrackCollection tracks) throws IOException {
         DatatypeFactory factory;
         try {
             factory = DatatypeFactory.newInstance();
@@ -126,7 +132,7 @@ public class GpxAdapter {
 
         GpxType gpx = new GpxType();
 
-        for (Track track : tracks) {
+        for (Track track : tracks.getTracks()) {
             TrkType trk = new TrkType();
             
             for (TrackSegment tracksegment : track.getSegments()) {

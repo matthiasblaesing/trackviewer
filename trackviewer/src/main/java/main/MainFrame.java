@@ -45,6 +45,7 @@ import main.table.SpeedFormat;
 import main.table.TimeFormat;
 import main.table.TrackTableModel;
 import track.Track;
+import track.TrackCollection;
 
 /**
  * A simple sample application that shows a OSM map of Europe
@@ -68,11 +69,11 @@ public class MainFrame extends JFrame {
 
     private TrackLoadListener tracklistener = new TrackLoadListener() {
         @Override
-        public void trackLoaded(final Track track) {
+        public void trackLoaded(final TrackCollection trackCollection) {
             SwingUtilities.invokeLater(new Runnable() {
                 @Override
                 public void run() {
-                    ((TrackTableModel) table.getModel()).addTracks(track);
+                    ((TrackTableModel) table.getModel()).addTracks(trackCollection);
                 }
             });
         }
@@ -247,11 +248,11 @@ public class MainFrame extends JFrame {
         table.getSelectionModel().addListSelectionListener(new ListMultiSelectionListener() {
             @Override
             public void valueChanged(List<Integer> indices) {
-                List<Track> selTracks = new ArrayList<>(indices.size());
+                List<TrackCollection> selTracks = new ArrayList<>(indices.size());
 
                 for (Integer idx : indices) {
                     idx = table.convertRowIndexToModel(idx);
-                    selTracks.add(model.getTrack(idx));
+                    selTracks.add(model.getTrackCollection(idx));
                 }
 
                 viewer.showRoute(selTracks);

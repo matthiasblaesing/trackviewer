@@ -23,6 +23,7 @@ import org.jxmapviewer.painter.CompoundPainter;
 import org.jxmapviewer.painter.Painter;
 
 import track.Track;
+import track.TrackCollection;
 import track.TrackPoint;
 import track.TrackSegment;
 
@@ -85,7 +86,7 @@ public class MapViewer extends JComponent {
      *
      * @param tracks the list of track
      */
-    public void showRoute(List<Track> tracks) {
+    public void showRoute(List<TrackCollection> tracks) {
         markerPainters.clear();
         routePainters.clear();
 
@@ -93,21 +94,24 @@ public class MapViewer extends JComponent {
         List<Painter<JXMapViewer>> painters = new ArrayList<>();
 
         int i = 0;
-        for (Track track : tracks) {
-            Color color = ColorProvider.getMainColor(i++);
-            
-            for (TrackSegment ts : track.getSegments()) {
-                List<GeoPosition> route = ts.getRoute();
-                positions.addAll(route);    
+        
+        for (TrackCollection tc : tracks) {
+            for (Track track : tc.getTracks()) {
+                Color color = ColorProvider.getMainColor(i++);
 
-                MarkerPainter markerPainter = new MarkerPainter(ts.getPoints(), color);
-                RoutePainter routePainter = new RoutePainter(route, color);
+                for (TrackSegment ts : track.getSegments()) {
+                    List<GeoPosition> route = ts.getRoute();
+                    positions.addAll(route);
 
-                markerPainters.add(markerPainter);
-                routePainters.add(routePainter);
+                    MarkerPainter markerPainter = new MarkerPainter(ts.getPoints(), color);
+                    RoutePainter routePainter = new RoutePainter(route, color);
 
-                painters.add(routePainter);
-                painters.add(markerPainter);
+                    markerPainters.add(markerPainter);
+                    routePainters.add(routePainter);
+
+                    painters.add(routePainter);
+                    painters.add(markerPainter);
+                }
             }
         }
 

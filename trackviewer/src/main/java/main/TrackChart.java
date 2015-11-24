@@ -18,6 +18,7 @@ import javax.swing.JToolBar;
 
 import main.chart.JChart;
 import track.Track;
+import track.TrackCollection;
 import track.TrackPoint;
 import track.TrackSegment;
 
@@ -33,7 +34,7 @@ public class TrackChart extends JComponent {
     private ValueType chartModeVert = ValueType.Height;
     private ValueType chartModeHorz = ValueType.Distance;
 
-    private List<Track> tracks;
+    private List<TrackCollection> tracks;
     private JChart chart;
 
     private List<SelectionListener> selectionListeners = new CopyOnWriteArrayList<>();
@@ -151,7 +152,7 @@ public class TrackChart extends JComponent {
     /**
      * @param tracks the list of tracks to display
      */
-    public void setTracks(List<Track> tracks) {
+    public void setTracks(List<TrackCollection> tracks) {
         this.tracks = new ArrayList<>(tracks);
 
         reload();
@@ -174,16 +175,18 @@ public class TrackChart extends JComponent {
     private void reload() {
         List<List<Point2D>> data = new ArrayList<>();
 
-        for (Track track : tracks) {
-            List<Point2D> pts = new ArrayList<>();
+        for (TrackCollection tc : tracks) {
+            for (Track track : tc.getTracks()) {
+                List<Point2D> pts = new ArrayList<>();
 
-            for (TrackSegment ts : track.getSegments()) {
-                for (TrackPoint trackPt : ts.getPoints()) {
-                    pts.add(chartPointFromTrackPoint(trackPt));
+                for (TrackSegment ts : track.getSegments()) {
+                    for (TrackPoint trackPt : ts.getPoints()) {
+                        pts.add(chartPointFromTrackPoint(trackPt));
+                    }
                 }
-            }
 
-            data.add(pts);
+                data.add(pts);
+            }
         }
 
         updateChartLabels();

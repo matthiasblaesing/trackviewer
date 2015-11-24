@@ -24,6 +24,7 @@ import com.garmin.xmlschemas.trainingcenterdatabase.v2.PositionT;
 import com.garmin.xmlschemas.trainingcenterdatabase.v2.TrackT;
 import com.garmin.xmlschemas.trainingcenterdatabase.v2.TrackpointT;
 import com.garmin.xmlschemas.trainingcenterdatabase.v2.TrainingCenterDatabaseT;
+import track.TrackCollection;
 import track.TrackSegment;
 
 /**
@@ -57,8 +58,8 @@ public class TcxAdapter {
      * @param tcx the tcx raw data
      * @return the extracted track data
      */
-    public List<Track> convertToTracks(TrainingCenterDatabaseT tcx) {
-        ArrayList<Track> list = new ArrayList<>();
+    public TrackCollection convertToTracks(TrainingCenterDatabaseT tcx) {
+        TrackCollection list = new TrackCollection();
 
         for (ActivityT activity : tcx.getActivities().getActivity()) {
             for (ActivityLapT lap : activity.getLap()) {
@@ -89,7 +90,7 @@ public class TcxAdapter {
 
                 }
                 track.addSegment(tracksegment);
-                list.add(track);
+                list.addTrack(track);
             }
         }
 

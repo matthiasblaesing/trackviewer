@@ -38,7 +38,7 @@ public class FixElevationAction extends AbstractAction implements ListSelectionL
         assert table.getModel() instanceof TrackTableModel;
         TrackTableModel ttm = (TrackTableModel) table.getModel();
         
-        fixer.fixTrack(ttm.getTrack(idx));
+        fixer.fixTrack(ttm.getTrackCollection(idx));
     }
     
     @Override

@@ -21,6 +21,7 @@ import tcx.TcxAdapter;
 import track.Track;
 
 import com.garmin.xmlschemas.trainingcenterdatabase.v2.TrainingCenterDatabaseT;
+import track.TrackCollection;
 
 /**
  * Loads a series of track files from a folder in an asynchronous manner.
@@ -89,20 +90,21 @@ public class TrackLoader extends Thread {
                         exceptOnInterrupt();
                         if (fname.toLowerCase().endsWith(".tcx")) {
                             TrainingCenterDatabaseT data = tcxAdapter.unmarshallObject(fis);
-                            List<Track> read = tcxAdapter.convertToTracks(data);
+                            TrackCollection read = tcxAdapter.convertToTracks(data);
 
-                            for (Track t : read) {
+                            for (Track t : read.getTracks()) {
                                 TrackComputer.repairTrackData(t);
                                 exceptOnInterrupt();
-                                cb.trackLoaded(t);
                             }
+                            
+                            cb.trackLoaded(read);
                         } else if (fname.toLowerCase().endsWith(".gpx")) {
-                            List<Track> read = gpxAdapter.read(fis);
-                            for (Track t : read) {
+                            TrackCollection read = gpxAdapter.read(fis);
+                            for (Track t : read.getTracks()) {
                                 TrackComputer.repairTrackData(t);
                                 exceptOnInterrupt();
-                                cb.trackLoaded(t);
                             }
+                            cb.trackLoaded(read);
                         }
 
                         log.debug("Loaded " + fname);

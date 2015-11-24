@@ -23,6 +23,7 @@ import main.table.TrackTableModel;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import track.Track;
+import track.TrackCollection;
 
 public class ExportTrackAction extends AbstractAction implements ListSelectionListener {
     private static final Log log = LogFactory.getLog(ExportTrackAction.class);    
@@ -58,10 +59,10 @@ public class ExportTrackAction extends AbstractAction implements ListSelectionLi
         assert table.getModel() instanceof TrackTableModel;
         TrackTableModel ttm = (TrackTableModel) table.getModel();
         
-        exportToFile(ttm.getTrack(idx));
+        exportToFile(ttm.getTrackCollection(idx));
     }
     
-    private void exportToFile(Track track) {	
+    private void exportToFile(TrackCollection trackCollection) {	
         try {
             JFileChooser fileChooser = new JFileChooser(lastFolder);
             fileChooser.addChoosableFileFilter(gpxFilter);
@@ -76,7 +77,7 @@ public class ExportTrackAction extends AbstractAction implements ListSelectionLi
                 lastFolder = fileChooser.getSelectedFile().getParentFile();
                 GpxAdapter adapter = new GpxAdapter();
                 try(FileOutputStream fos = new FileOutputStream(fileName)) {
-                    adapter.write(fos, Collections.singletonList(track));
+                    adapter.write(fos, trackCollection);
                 }
             }
         } catch (JAXBException e) {
