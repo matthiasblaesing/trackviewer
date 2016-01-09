@@ -107,8 +107,12 @@ public class TrackSegment {
         if (points.size() < 2) {
             return 0;
         }
-        return points.get(points.size() - 1).getTime().getTime()
-                - points.get(0).getTime().getTime();
+        try {
+            return points.get(points.size() - 1).getTime().getTime()
+                    - points.get(0).getTime().getTime();
+        } catch (NullPointerException ex) {
+            return 0;
+        }
     }
 
     public Date getStartTime() {

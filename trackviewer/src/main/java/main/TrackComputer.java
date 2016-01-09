@@ -49,7 +49,10 @@ public class TrackComputer {
                         }
                     }
 
-                    if (lastValidPoint != null && nextValidPoint != null) {
+                    if (lastValidPoint != null 
+                            && nextValidPoint != null 
+                            && lastValidPoint.getTime() != null 
+                            && nextValidPoint.getTime() != null) {
                         long lastTime = lastValidPoint.getTime().getTime();
                         long nextTime = nextValidPoint.getTime().getTime();
                         long time = pt.getTime().getTime();
@@ -84,11 +87,13 @@ public class TrackComputer {
             return;
         }
 
-        long start = points.get(0).getTime().getTime();
+        if (points.get(0).getTime() != null) {
+            long start = points.get(0).getTime().getTime();
 
-        for (TrackPoint point : points) {
-            long time = point.getTime().getTime();
-            point.setRelativeTime(time - start);
+            for (TrackPoint point : points) {
+                long time = point.getTime().getTime();
+                point.setRelativeTime(time - start);
+            }
         }
     }
 
@@ -127,6 +132,7 @@ public class TrackComputer {
             points.addAll(ts.getPoints());
         }
 
+        try {
         for (int index = 0; index < points.size(); index++) {
             // compute speed from [-range..range] around index
             int lowBound = Math.max(index - range, 0);
@@ -142,5 +148,6 @@ public class TrackComputer {
                 points.get(index).setSpeed(deltaDistance * 3600.0 / deltaTime);
             }
         }
+        } catch (NullPointerException ex) {}
     }
 }

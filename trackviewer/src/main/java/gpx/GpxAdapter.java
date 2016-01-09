@@ -4,9 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.GregorianCalendar;
-import java.util.List;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
@@ -26,6 +24,7 @@ import com.topografix.gpx._1._1.ObjectFactory;
 import com.topografix.gpx._1._1.TrkType;
 import com.topografix.gpx._1._1.TrksegType;
 import com.topografix.gpx._1._1.WptType;
+import java.util.Date;
 import track.TrackCollection;
 import track.TrackSegment;
 import track.Waypoint;
@@ -93,10 +92,14 @@ public class GpxAdapter {
                     } else {
                         ele = Double.NaN;
                     }
-                    GregorianCalendar cal = pt.getTime().toGregorianCalendar();
+                    Date cal = null;
+                    try {
+                        cal = pt.getTime().toGregorianCalendar().getTime();
+                    } catch (NullPointerException ex) {
+                    }
                     GeoPosition pos = new GeoPosition(lat, lon);
 
-                    TrackPoint tp = new TrackPoint(pos, cal.getTime());
+                    TrackPoint tp = new TrackPoint(pos, cal);
 
                     tp.setElevation(ele);
                     ts.addPoint(tp);
@@ -158,10 +161,12 @@ public class GpxAdapter {
                     wpt.setLon(BigDecimal.valueOf(pt.getPos().getLongitude()));
                     wpt.setEle(BigDecimal.valueOf(pt.getElevation()));
 
-                    GregorianCalendar cal = new GregorianCalendar();
-                    cal.setTime(pt.getTime());
-                    wpt.setTime(factory.newXMLGregorianCalendar(cal));
-
+                    if (pt.getTime() != null) {
+                        GregorianCalendar cal = new GregorianCalendar();
+                        cal.setTime(pt.getTime());
+                        wpt.setTime(factory.newXMLGregorianCalendar(cal));
+                    }
+                    
                     seg.getTrkpt().add(wpt);
                 }
                 trk.getTrkseg().add(seg);
