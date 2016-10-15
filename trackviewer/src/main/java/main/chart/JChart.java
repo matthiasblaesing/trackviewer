@@ -174,12 +174,18 @@ public class JChart extends JComponent {
         if (range <= 0.0) {
             return;
         }
-
-        double multi = findMultiplier(chartRect.getWidth(), range, 40.0);
-        double val = boundLow.getX();
-
+        
         DecimalFormat df = new DecimalFormat("#.##");
-
+        DecimalFormat measureDf = new DecimalFormat("0.00");
+        
+        String minString = measureDf.format(boundLow.getX());
+        String maxString = measureDf.format(boundHigh.getX());
+        double minStringWidth = g.getFontMetrics().getStringBounds(minString, g).getWidth();
+        double maxStringWidth = g.getFontMetrics().getStringBounds(maxString, g).getWidth();
+        
+        double multi = findMultiplier(chartRect.getWidth(), range, 2 * Math.max(minStringWidth, maxStringWidth));
+        double val = boundLow.getX();
+        
         int yTop = (int) chartRect.getMinY() - overlap;
         int yBot = (int) chartRect.getMaxY() + overlap;
 
