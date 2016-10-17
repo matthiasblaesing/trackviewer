@@ -4,15 +4,7 @@ import gpx.GpxAdapter;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.FilenameFilter;
 import java.io.IOException;
-import java.io.OutputStream;
-import java.util.Collections;
-import java.util.List;
-
-import javax.swing.JOptionPane;
-import javax.xml.bind.JAXBException;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -20,7 +12,15 @@ import org.apache.commons.logging.LogFactory;
 import tcx.TcxAdapter;
 import track.Track;
 
-import com.garmin.xmlschemas.trainingcenterdatabase.v2.TrainingCenterDatabaseT;
+import common.TrackCollectionReader;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import track.TrackCollection;
 
 /**
@@ -28,103 +28,91 @@ import track.TrackCollection;
  *
  * @author Martin Steiger
  */
-public class TrackLoader extends Thread {
+public class TrackLoader {
 
+    private ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
     private static final Log log = LogFactory.getLog(TrackLoader.class);
-    private File folder;
     private TrackLoadListener cb;
-    
-    private TrackLoader(final File folder, final TrackLoadListener cb) {
-        this.folder = folder;
+    private List<Future<TrackCollection>> runningList = new ArrayList<>();
+
+    public TrackLoader(TrackLoadListener cb) {
         this.cb = cb;
     }
-    
-    /**
-     * @param folder the folder that contains the track files
-     * @param cb the callback
-     * @return TrackLoader Thread
-     */
-    public static TrackLoader readTracks(final File folder, final TrackLoadListener cb) {
-        if(cb == null) {
-            throw new NullPointerException("TrackLoadListener must be supplied");
-        }
-        if(cb == null) {
-            throw new NullPointerException("Folder must be supplied");
-        }
-        TrackLoader tl = new TrackLoader(folder, cb);
-        tl.start();
-        return tl;
-    }
 
-    @Override
-    public void run() {
-        try {
-            String[] files = folder.list(new FilenameFilter() {
-                @Override
-                public boolean accept(File dir, String name) {
-                    return name.endsWith(".tcx") || name.endsWith(".gpx");
-                }
-            });
-
-            TcxAdapter tcxAdapter;
-            GpxAdapter gpxAdapter;
-
-            try {
-                tcxAdapter = new TcxAdapter();
-            } catch (JAXBException e) {
-                cb.reportError("Error initializing TcxAdapter", e);
-                log.error("Error initializing TcxAdapter", e);
-                return;
-            }
-            try {
-                gpxAdapter = new GpxAdapter();
-            } catch (JAXBException e) {
-                cb.reportError("Error initializing GpxAdapter", e);
-                log.error("Error initializing GpxAdapter", e);
-                return;
-            }
-
-            if (files != null) {
-                for (String fname : files) {
-                    try (FileInputStream fis = new FileInputStream(new File(folder, fname))) {
-                        exceptOnInterrupt();
-                        if (fname.toLowerCase().endsWith(".tcx")) {
-                            TrainingCenterDatabaseT data = tcxAdapter.unmarshallObject(fis);
-                            TrackCollection read = tcxAdapter.convertToTracks(data);
-
-                            for (Track t : read.getTracks()) {
-                                TrackComputer.repairTrackData(t);
-                                exceptOnInterrupt();
-                            }
-                            
-                            cb.trackLoaded(read);
-                        } else if (fname.toLowerCase().endsWith(".gpx")) {
-                            TrackCollection read = gpxAdapter.read(fis);
-                            for (Track t : read.getTracks()) {
-                                TrackComputer.repairTrackData(t);
-                                exceptOnInterrupt();
-                            }
-                            cb.trackLoaded(read);
-                        }
-
-                        log.debug("Loaded " + fname);
-                    } catch (IOException | JAXBException e) {
-                        String message = String.format("Failed to read '%s'.", fname);
-                        cb.reportError(message, e);
-                        log.error(message, e);
-                    } catch (InterruptedException ex) {
-                        break;
-                    }
+    public void readTracks(final File folder) throws InterruptedException {
+        stopLoading();
+        
+        cb.startReading();
+        
+        if(folder.canRead()) {
+            for(File f: folder.listFiles()) {
+                if(f.isFile() && (f.getName().toLowerCase().endsWith(".gpx")|| f.getName().toLowerCase().endsWith(".tcx"))) {
+                    Callable<TrackCollection> trackCollection = new TrackReader(f);
+                    runningList.add(executor.submit(trackCollection));
                 }
             }
-        } finally {
-            cb.finished();
         }
+        
+        for(Future<TrackCollection> f: new ArrayList<>(runningList)) {
+            if(! f.isCancelled()) {
+                try {
+                    cb.trackLoaded(f.get());
+                } catch (ExecutionException ex) {
+                    cb.reportError(ex.getMessage(), ex);
+                }
+            }
+            runningList.remove(f);
+        }
+        
+        cb.finishReading();
     }
     
-    private void exceptOnInterrupt() throws InterruptedException {
-        if(Thread.interrupted()) {
-            throw new InterruptedException();
+    private void stopLoading() {
+        for (Future f: new ArrayList<>(runningList)) {
+            f.cancel(true);
+            runningList.remove(f);
+        }
     }
-}
+
+    private static class TrackReader implements Callable<TrackCollection> {
+
+        private final File input;
+        private 
+
+        TrackReader(File input) {
+            this.input = input;
+        }
+        
+        @Override
+        public TrackCollection call() throws Exception {
+            try (InputStream is = new FileInputStream(input)) {
+                TrackCollectionReader tcr = null;
+                if (input.getName().toLowerCase().endsWith(".tcx")) {
+                    tcr = new TcxAdapter();
+                } else if (input.getName().toLowerCase().endsWith(".gpx")) {
+                    tcr = new GpxAdapter();
+                } else {
+                    throw new IOException("Failed to find reader for file: "
+                            + input.getName());
+                }
+
+                if (tcr == null) {
+                    return null;
+                }
+
+                TrackCollection collection = tcr.getTrackCollection(is);
+                for (Track t : collection.getTracks()) {
+                    TrackComputer.repairTrackData(t);
+                    exceptOnInterrupt();
+                }
+                return collection;
+            }
+        }
+
+        private void exceptOnInterrupt() throws InterruptedException {
+            if (Thread.interrupted()) {
+                throw new InterruptedException();
+            }
+        }
+    }
 }

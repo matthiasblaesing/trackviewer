@@ -1,5 +1,6 @@
 package gpx;
 
+import com.garmin.xmlschemas.trainingcenterdatabase.v2.TrainingCenterDatabaseT;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -24,6 +25,7 @@ import com.topografix.gpx._1._1.ObjectFactory;
 import com.topografix.gpx._1._1.TrkType;
 import com.topografix.gpx._1._1.TrksegType;
 import com.topografix.gpx._1._1.WptType;
+import common.TrackCollectionReader;
 import java.util.Date;
 import track.TrackCollection;
 import track.TrackSegment;
@@ -34,8 +36,13 @@ import track.Waypoint;
  *
  * @author Martin Steiger
  */
-public class GpxAdapter {
+public class GpxAdapter implements TrackCollectionReader {
 
+    @Override
+    public TrackCollection getTrackCollection(InputStream is) throws JAXBException, IOException {
+        return read(is);
+    }
+    
     private final JAXBContext context;
 
     /**

@@ -2,9 +2,7 @@ package tcx;
 
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.ArrayList;
 import java.util.GregorianCalendar;
-import java.util.List;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
@@ -24,6 +22,7 @@ import com.garmin.xmlschemas.trainingcenterdatabase.v2.PositionT;
 import com.garmin.xmlschemas.trainingcenterdatabase.v2.TrackT;
 import com.garmin.xmlschemas.trainingcenterdatabase.v2.TrackpointT;
 import com.garmin.xmlschemas.trainingcenterdatabase.v2.TrainingCenterDatabaseT;
+import common.TrackCollectionReader;
 import track.TrackCollection;
 import track.TrackSegment;
 
@@ -32,8 +31,14 @@ import track.TrackSegment;
  *
  * @author Martin Steiger
  */
-public class TcxAdapter {
+public class TcxAdapter implements TrackCollectionReader {
 
+    @Override
+    public TrackCollection getTrackCollection(InputStream is) throws JAXBException {
+        TrainingCenterDatabaseT db = unmarshallObject(is);
+        return convertToTracks(db);
+    }
+    
     private final JAXBContext context;
 
     /**

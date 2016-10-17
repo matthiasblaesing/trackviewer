@@ -26,6 +26,7 @@ import javax.swing.RowSorter;
 import javax.swing.SortOrder;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
+import javax.swing.SwingWorker;
 import javax.swing.table.TableModel;
 import javax.swing.table.TableRowSorter;
 import joptsimple.OptionException;
@@ -64,10 +65,23 @@ public class MainFrame extends JFrame {
     private final Action fixElevationAction;
     private final Action quitAction;
     private final Action reloadTracks;
-    private volatile TrackLoader trackLoader;
     private volatile File tracksdir = null;
 
     private TrackLoadListener tracklistener = new TrackLoadListener() {
+        @Override
+        public void startReading() {
+            SwingUtilities.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    ((TrackTableModel) table.getModel()).clear();
+                }
+            });
+        }
+
+        @Override
+        public void finishReading() {
+        }
+        
         @Override
         public void trackLoaded(final TrackCollection trackCollection) {
             SwingUtilities.invokeLater(new Runnable() {
@@ -76,11 +90,6 @@ public class MainFrame extends JFrame {
                     ((TrackTableModel) table.getModel()).addTracks(trackCollection);
                 }
             });
-        }
-
-        @Override
-        public void finished() {
-            setTrackLoader(null); // Marked as safe to be called Off the EDT
         }
 
         @Override
@@ -103,6 +112,8 @@ public class MainFrame extends JFrame {
             });
         }
     };
+    
+    private volatile TrackLoader trackLoader = new TrackLoader(tracklistener);
     
     /**
      * Constructs a new instance
@@ -165,47 +176,17 @@ public class MainFrame extends JFrame {
     }
     
     public void updateTracks() {
-        if(trackLoader != null) {
-            trackLoader.interrupt();
-        }
-
-        for (int i = 0; i < 100; i++) {
-            if (trackLoader == null) {
-                break;
+        new SwingWorker<Object, Object>() {
+            @Override
+            protected Object doInBackground() throws Exception {
+                trackLoader.readTracks(tracksdir);
+                return null;
             }
-            try {
-                Thread.sleep(50);
-            } catch (InterruptedException ex) {
-                break;
-            }
-        }
-
-        ((TrackTableModel) table.getModel()).clear();
-        trackLoader = TrackLoader.readTracks(tracksdir, tracklistener);
+        }.execute();
     }
     
     public boolean isLoading() {
         return trackLoader != null;
-    }
-    
-    /**
-     * Set trackloader - can be called on and off the EDT
-     * 
-     * @param trackloader 
-     */
-    private void setTrackLoader(final TrackLoader trackloader) {
-        final boolean oldValue = isLoading();
-        this.trackLoader = trackloader;
-        Runnable updateOnEDT = new Runnable() {
-            public void run() {
-                MainFrame.this.firePropertyChange("loading", oldValue, isLoading());
-            }
-        };
-        if(SwingUtilities.isEventDispatchThread()) {
-            updateOnEDT.run();
-        } else {
-            SwingUtilities.invokeLater(updateOnEDT);
-        }
     }
     
     private JTable createTable() {

@@ -10,16 +10,13 @@ import track.TrackCollection;
  * @author Martin Steiger
  */
 public interface TrackLoadListener {
+    public void startReading();
+    public void finishReading();
 
     /**
      * @param track the track
      */
     public void trackLoaded(TrackCollection track);
-
-    /**
-     * Called after all available tracks are read and the last trackLoaded call returns
-     */
-    public void finished();
     
     /**
      * Called in case of an error.
