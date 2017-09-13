@@ -33,6 +33,7 @@ import joptsimple.OptionException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import main.actions.AutomaticZoom;
+import main.actions.CopyMap;
 import main.actions.ExportTrackAction;
 import main.actions.FixElevationAction;
 import main.actions.QuitAction;
@@ -45,7 +46,6 @@ import main.table.JShadedTable;
 import main.table.SpeedFormat;
 import main.table.TimeFormat;
 import main.table.TrackTableModel;
-import track.Track;
 import track.TrackCollection;
 
 /**
@@ -65,9 +65,10 @@ public class MainFrame extends JFrame {
     private final Action fixElevationAction;
     private final Action quitAction;
     private final Action reloadTracks;
+    private final Action copyMap;
     private volatile File tracksdir = null;
 
-    private TrackLoadListener tracklistener = new TrackLoadListener() {
+    private final TrackLoadListener tracklistener = new TrackLoadListener() {
         @Override
         public void startReading() {
             SwingUtilities.invokeLater(new Runnable() {
@@ -118,6 +119,7 @@ public class MainFrame extends JFrame {
     /**
      * Constructs a new instance
      */
+    @SuppressWarnings("OverridableMethodCallInConstructor")
     public MainFrame(String tracksdir, String apiKey) {
         super("TrackViewer");
 
@@ -126,6 +128,7 @@ public class MainFrame extends JFrame {
         createTable();
 
         automaticZoomAction = new AutomaticZoom(viewer);
+        copyMap = new CopyMap(viewer);
         exportTrackAction = new ExportTrackAction(table);
         fixElevationAction = new FixElevationAction(apiKey != null ? apiKey: "", table);
         quitAction = new QuitAction();
@@ -259,8 +262,14 @@ public class MainFrame extends JFrame {
         menu.addSeparator();
         menu.add(quitAction);
         
+        JMenu editMenu = new JMenu("Edit");
+        editMenu.setMnemonic(KeyEvent.VK_E);
+        menuBar.add(editMenu);
+        
+        editMenu.add(copyMap);
+        
         JMenu viewMenu = new JMenu("View");
-        viewMenu.setMnemonic('V');
+        viewMenu.setMnemonic(KeyEvent.VK_V);
         menuBar.add(viewMenu);
         
         viewMenu.add(new JCheckBoxMenuItem(automaticZoomAction));

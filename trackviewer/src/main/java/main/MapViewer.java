@@ -2,6 +2,8 @@ package main;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -39,18 +41,19 @@ public class MapViewer extends JComponent {
 
     private static final long serialVersionUID = -1636285199192286728L;
 
-    private CompoundPainter<JXMapViewer> painter;
+    private final CompoundPainter<JXMapViewer> painter;
 
     private JXMapViewer mapViewer = new JXMapViewer();
 
-    private List<RoutePainter> routePainters = new ArrayList<>();
-    private List<MarkerPainter> markerPainters = new ArrayList<>();
+    private final List<RoutePainter> routePainters = new ArrayList<>();
+    private final List<MarkerPainter> markerPainters = new ArrayList<>();
     
     private boolean fitViewportOnChange = true;
 
     /**
      * Constructs a new instance
      */
+    @SuppressWarnings("OverridableMethodCallInConstructor")
     public MapViewer() {
         // Create a TileFactoryInfo for OpenStreetMap
         TileFactoryInfo info = new OSMTileFactoryInfo();
@@ -69,6 +72,12 @@ public class MapViewer extends JComponent {
         mapViewer.addMouseListener(mia);
         mapViewer.addMouseMotionListener(mia);
         mapViewer.addMouseWheelListener(new ZoomMouseWheelListenerCursor(mapViewer));
+        mapViewer.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                mapViewer.requestFocus();
+            }
+        });
 
         painter = new CompoundPainter<>();
         mapViewer.setOverlayPainter(painter);
