@@ -57,6 +57,8 @@ public class TrackChart extends JComponent {
             }
 
             private void select(int x) {
+                chart.requestFocus();
+                
                 double value = chart.setMarker(x);
 
                 if(chartModeHorz == ValueType.Distance) {

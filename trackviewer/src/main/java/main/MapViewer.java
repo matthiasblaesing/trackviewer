@@ -77,6 +77,13 @@ public class MapViewer extends JComponent {
             public void mouseClicked(MouseEvent e) {
                 mapViewer.requestFocus();
             }
+
+            @Override
+            public void mouseDragged(MouseEvent e) {
+                mapViewer.requestFocus();
+            }
+            
+            
         });
 
         painter = new CompoundPainter<>();

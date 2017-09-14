@@ -33,7 +33,7 @@ import joptsimple.OptionException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import main.actions.AutomaticZoom;
-import main.actions.CopyMap;
+import main.actions.CopyAction;
 import main.actions.ExportTrackAction;
 import main.actions.FixElevationAction;
 import main.actions.QuitAction;
@@ -124,11 +124,19 @@ public class MainFrame extends JFrame {
         super("TrackViewer");
 
         viewer = new MapViewer();
+        trackChart = new TrackChart();
+
+        trackChart.addSelectionListener(new SelectionListener() {
+            @Override
+            public void selected(ValueType axis, double value) {
+                viewer.setMarker(axis, value);
+            }
+        });
 
         createTable();
 
         automaticZoomAction = new AutomaticZoom(viewer);
-        copyMap = new CopyMap(viewer);
+        copyMap = new CopyAction(viewer, trackChart);
         exportTrackAction = new ExportTrackAction(table);
         fixElevationAction = new FixElevationAction(apiKey != null ? apiKey: "", table);
         quitAction = new QuitAction();
@@ -139,15 +147,6 @@ public class MainFrame extends JFrame {
         // put in a scrollpane to add scroll bars
         JScrollPane tablePane = new JScrollPane(table);
         table.setFillsViewportHeight(true);
-
-        trackChart = new TrackChart();
-
-        trackChart.addSelectionListener(new SelectionListener() {
-            @Override
-            public void selected(ValueType axis, double value) {
-                viewer.setMarker(axis, value);
-            }
-        });
 
         statusBar = new StatusBar();
         add(statusBar, BorderLayout.SOUTH);
