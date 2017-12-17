@@ -51,7 +51,7 @@ public class MarkerPainter extends AbstractPainter<JXMapViewer> {
      * @param color the color
      */
     public MarkerPainter(List<TrackPoint> track, Color color) {
-        this(track, Collections.EMPTY_LIST, color);
+        this(track, Collections.<Waypoint>emptyList(), color);
     }
     
     public MarkerPainter(List<TrackPoint> track, List<Waypoint> waypoints, Color color) {

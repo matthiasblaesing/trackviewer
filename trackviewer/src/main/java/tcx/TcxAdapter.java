@@ -23,6 +23,8 @@ import com.garmin.xmlschemas.trainingcenterdatabase.v2.TrackT;
 import com.garmin.xmlschemas.trainingcenterdatabase.v2.TrackpointT;
 import com.garmin.xmlschemas.trainingcenterdatabase.v2.TrainingCenterDatabaseT;
 import common.TrackCollectionReader;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import track.TrackCollection;
 import track.TrackSegment;
 
@@ -33,13 +35,13 @@ import track.TrackSegment;
  */
 public class TcxAdapter implements TrackCollectionReader {
 
+    private final JAXBContext context;
+    
     @Override
     public TrackCollection getTrackCollection(InputStream is) throws JAXBException {
         TrainingCenterDatabaseT db = unmarshallObject(is);
         return convertToTracks(db);
     }
-    
-    private final JAXBContext context;
 
     /**
      * @throws JAXBException occurs if ..
@@ -110,10 +112,17 @@ public class TcxAdapter implements TrackCollectionReader {
     public TrainingCenterDatabaseT unmarshallObject(InputStream is) throws JAXBException {
         Unmarshaller unmarshaller = context.createUnmarshaller();
 
-        JAXBElement<TrainingCenterDatabaseT> jaxbObject;
-        jaxbObject = (JAXBElement<TrainingCenterDatabaseT>) unmarshaller.unmarshal(is);
-
-        return jaxbObject.getValue();
+        Object unmarshalledObject = unmarshaller.unmarshal(is);
+        if(! (unmarshalledObject instanceof JAXBElement)) {
+            throw new JAXBException("File could not be parsed as TCX (Type of Root Element wrong - Code 1)");
+        }
+        
+        Object value = ((JAXBElement) unmarshalledObject).getValue();
+        if(value instanceof TrainingCenterDatabaseT) {
+            return (TrainingCenterDatabaseT) value;
+        } else {
+            throw new JAXBException("File could not be parsed as TCX (Type of Root Element wrong - Code 2)");
+        }
     }
 
     /**

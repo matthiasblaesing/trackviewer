@@ -136,8 +136,17 @@ public class GpxAdapter implements TrackCollectionReader {
     private GpxType unmarshallObject(InputStream is) throws JAXBException {
         Unmarshaller unmarshaller = context.createUnmarshaller();
 
-        JAXBElement<GpxType> jaxbObject = (JAXBElement<GpxType>) unmarshaller.unmarshal(is);
-        return jaxbObject.getValue();
+        Object unmarshalledObject = unmarshaller.unmarshal(is);
+        if(! (unmarshalledObject instanceof JAXBElement)) {
+            throw new JAXBException("File could not be parsed as GPX (Type of Root Element wrong - Code 1)");
+        }
+        
+        Object value = ((JAXBElement) unmarshalledObject).getValue();
+        if(value instanceof GpxType) {
+            return (GpxType) value;
+        } else {
+            throw new JAXBException("File could not be parsed as GPX (Type of Root Element wrong - Code 2)");
+        }
     }
 
     /**

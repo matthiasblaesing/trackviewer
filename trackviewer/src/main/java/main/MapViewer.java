@@ -128,7 +128,7 @@ public class MapViewer extends JComponent {
                     markerPainters.add(markerPainter);
                     routePainters.add(routePainter);
                     
-                    waypoints = Collections.EMPTY_LIST;
+                    waypoints = Collections.<Waypoint>emptyList();
                 }
             }
         }
@@ -200,7 +200,7 @@ public class MapViewer extends JComponent {
     /**
      * Determine whether the 
      * 
-     * @return 
+     * @return true if the viewport is adjusted when track is changed
      */
     public boolean isFitViewportOnChange() {
         return fitViewportOnChange;
