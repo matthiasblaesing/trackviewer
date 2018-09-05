@@ -11,6 +11,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.Action;
 import javax.swing.JCheckBoxMenuItem;
 
@@ -55,6 +57,7 @@ import track.TrackCollection;
  */
 public class MainFrame extends JFrame {
 
+    private static final Logger LOG = Logger.getLogger(MainFrame.class.getName());
     private static final long serialVersionUID = -9215006987029836062L;
     private MapViewer viewer;
     private JTable table;
@@ -108,7 +111,9 @@ public class MainFrame extends JFrame {
                         }
                         sb.append(ex.getLocalizedMessage());
                     }
-                    JOptionPane.showMessageDialog(null, sb.toString());
+                    String message = sb.toString();
+                    LOG.log(Level.WARNING, message);
+                    JOptionPane.showMessageDialog(null, message);
                 }
             });
         }
