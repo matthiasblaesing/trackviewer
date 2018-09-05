@@ -73,15 +73,6 @@ public class JShadedTable extends JTable {
         super(dm, cm);
     }
 
-    /**
-     * @see JTable#JTable(Vector, Vector)
-     * @param rowData the data for the new table
-     * @param columnNames names of each column
-     */
-    public JShadedTable(Vector<?> rowData, Vector<?> columnNames) {
-        super(rowData, columnNames);
-    }
-
     @Override
     public Component prepareRenderer(TableCellRenderer renderer, int row, int column) {
         Component comp = super.prepareRenderer(renderer, row, column);
