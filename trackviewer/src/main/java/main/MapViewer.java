@@ -1,9 +1,17 @@
 package main;
 
+import java.awt.BasicStroke;
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Cursor;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.Point;
+import java.awt.Toolkit;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.geom.Point2D;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -43,7 +51,28 @@ public class MapViewer extends JComponent {
 
     private final CompoundPainter<JXMapViewer> painter;
 
-    private JXMapViewer mapViewer = new JXMapViewer();
+    // Create a new blank cursor.
+    private Cursor blankCursor = Toolkit.getDefaultToolkit().createCustomCursor(
+        new BufferedImage(16, 16, BufferedImage.TYPE_INT_ARGB),
+        new Point(0, 0),
+        "blank cursor");
+
+    private JXMapViewer mapViewer = new JXMapViewer() {
+        @Override
+        protected void paintComponent(Graphics g) {
+            super.paintComponent(g);
+            if(cursorLocation != null) {
+                Graphics2D g2d = (Graphics2D) g.create();
+                g2d.setColor(Color.black);
+                g2d.setStroke(new BasicStroke(2));
+                g2d.drawLine(0, (int) cursorLocation.y, getWidth(), (int) cursorLocation.y);
+                g2d.drawLine((int) cursorLocation.x, 0, (int) cursorLocation.x, getHeight());
+                g2d.dispose();
+            }
+        }
+    };
+
+    private Point cursorLocation = null;
 
     private final List<RoutePainter> routePainters = new ArrayList<>();
     private final List<MarkerPainter> markerPainters = new ArrayList<>();
@@ -72,7 +101,7 @@ public class MapViewer extends JComponent {
         mapViewer.addMouseListener(mia);
         mapViewer.addMouseMotionListener(mia);
         mapViewer.addMouseWheelListener(new ZoomMouseWheelListenerCursor(mapViewer));
-        mapViewer.addMouseListener(new MouseAdapter() {
+        MouseAdapter ma = new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
                 mapViewer.requestFocus();
@@ -80,14 +109,32 @@ public class MapViewer extends JComponent {
 
             @Override
             public void mouseDragged(MouseEvent e) {
+                cursorLocation = new Point(e.getX(), e.getY());
                 mapViewer.requestFocus();
+                mapViewer.repaint();
             }
-            
-            
-        });
+
+            @Override
+            public void mouseMoved(MouseEvent e) {
+                cursorLocation = new Point(e.getX(), e.getY());
+                mapViewer.repaint();
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                cursorLocation = null;
+                mapViewer.repaint();
+            }
+
+
+        };
+        mapViewer.addMouseListener(ma);
+        mapViewer.addMouseMotionListener(ma);
 
         painter = new CompoundPainter<>();
         mapViewer.setOverlayPainter(painter);
+        // mapViewer.setCursor(java.awt.Cursor.getPredefinedCursor(Cursor.CROSSHAIR_CURSOR));
+        mapViewer.setCursor(blankCursor);
 
         GeoPosition frankfurt = new GeoPosition(50, 7, 0, 8, 41, 0);
 
