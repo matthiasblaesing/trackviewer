@@ -36,8 +36,6 @@ public class StatusBar extends JPanel {
         extraLabel.setBorder(new BevelBorder(BevelBorder.LOWERED));
         add(extraLabel);
         extraLabel.setHorizontalAlignment(SwingConstants.RIGHT);
-
-        add(Box.createHorizontalStrut(50));
     }
 
     /**

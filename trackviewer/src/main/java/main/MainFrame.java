@@ -245,6 +245,24 @@ public class MainFrame extends JFrame {
 
                 viewer.showRoute(selTracks);
                 trackChart.setTracks(selTracks);
+
+                if(selTracks.isEmpty()) {
+                    statusBar.setExtra("");
+                } else {
+                    double totalDistance = 0;
+                    long totalTime = 0;
+                    for(TrackCollection tc: selTracks) {
+                        totalDistance += tc.getTotalDistance();
+                        totalTime += tc.getTotalTime();
+                    }
+                    statusBar.setExtra(String.format(
+                        "\u2211 Distance: %.2f km, \u2211 Time: %d:%02d h, Average speed: %.2f km/h",
+                        totalDistance / 1000d,
+                        totalTime / (3600 * 1000),
+                        (totalTime % (3600 * 1000)) / (60 * 1000),
+                        totalDistance / totalTime * 3600
+                    ));
+                }
             }
         });
 
