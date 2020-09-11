@@ -5,12 +5,15 @@ import java.awt.Dimension;
 import java.awt.event.KeyEvent;
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.Action;
@@ -72,26 +75,44 @@ public class MainFrame extends JFrame {
     private volatile File tracksdir = null;
 
     private final TrackLoadListener tracklistener = new TrackLoadListener() {
+        private Map<File,Long> knownReadState = Collections.emptyMap();
+
+        @Override
+        public boolean doRead(File file) {
+            Long mtime = knownReadState.remove(file);
+            return mtime == null || file.lastModified() > mtime;
+        }
+
         @Override
         public void startReading() {
+            try {
+                SwingUtilities.invokeAndWait(() -> {
+                    this.knownReadState = new HashMap<>(((TrackTableModel) table.getModel()).getReadState());
+                });
+            } catch (InterruptedException | InvocationTargetException ex) {
+                Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, null, ex);
+                throw new RuntimeException(ex);
+            }
+        }
+
+        @Override
+        public void finishReading() {
             SwingUtilities.invokeLater(new Runnable() {
                 @Override
                 public void run() {
-                    ((TrackTableModel) table.getModel()).clear();
+                    for(File f: knownReadState.keySet()) {
+                        ((TrackTableModel) table.getModel()).removeTrack(f);
+                    }
                 }
             });
         }
 
         @Override
-        public void finishReading() {
-        }
-        
-        @Override
-        public void trackLoaded(final TrackCollection trackCollection) {
+        public void trackLoaded(final File file, final TrackCollection trackCollection) {
             SwingUtilities.invokeLater(new Runnable() {
                 @Override
                 public void run() {
-                    ((TrackTableModel) table.getModel()).addTracks(trackCollection);
+                    ((TrackTableModel) table.getModel()).addTrack(file, trackCollection);
                 }
             });
         }

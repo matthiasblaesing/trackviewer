@@ -33,7 +33,7 @@ public class TrackLoader {
     private ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
     private static final Log log = LogFactory.getLog(TrackLoader.class);
     private TrackLoadListener cb;
-    private List<Future<TrackCollection>> runningList = new ArrayList<>();
+    private List<Future<TrackReader>> runningList = new ArrayList<>();
 
     public TrackLoader(TrackLoadListener cb) {
         this.cb = cb;
@@ -47,21 +47,24 @@ public class TrackLoader {
         if(folder.canRead()) {
             for(File f: folder.listFiles()) {
                 if(f.isFile() && (f.getName().toLowerCase().endsWith(".gpx")|| f.getName().toLowerCase().endsWith(".tcx"))) {
-                    Callable<TrackCollection> trackCollection = new TrackReader(f);
-                    runningList.add(executor.submit(trackCollection));
+                    if(cb.doRead(f)) {
+                        TrackReader trackCollection = new TrackReader(f);
+                        runningList.add(executor.submit(trackCollection));
+                    }
                 }
             }
         }
         
-        for(Future<TrackCollection> f: new ArrayList<>(runningList)) {
-            if(! f.isCancelled()) {
+        for(Future<TrackReader> ftr: new ArrayList<>(runningList)) {
+            if(! ftr.isCancelled()) {
                 try {
-                    cb.trackLoaded(f.get());
+                    TrackReader tr = ftr.get();
+                    cb.trackLoaded(tr.getInput(), tr.getResult());
                 } catch (ExecutionException ex) {
                     cb.reportError(ex.getMessage(), ex);
                 }
             }
-            runningList.remove(f);
+            runningList.remove(ftr);
         }
         
         cb.finishReading();
@@ -74,17 +77,17 @@ public class TrackLoader {
         }
     }
 
-    private static class TrackReader implements Callable<TrackCollection> {
+    private static class TrackReader implements Callable<TrackReader> {
 
         private final File input;
-        private 
+        private TrackCollection result;
 
         TrackReader(File input) {
             this.input = input;
         }
-        
+
         @Override
-        public TrackCollection call() throws Exception {
+        public TrackReader call() throws Exception {
             try (InputStream is = new FileInputStream(input)) {
                 TrackCollectionReader tcr = null;
                 if (input.getName().toLowerCase().endsWith(".tcx")) {
@@ -105,8 +108,17 @@ public class TrackLoader {
                     TrackComputer.repairTrackData(t);
                     exceptOnInterrupt();
                 }
-                return collection;
+                result = collection;
+                return this;
             }
+        }
+
+        public TrackCollection getResult() {
+            return result;
+        }
+
+        public File getInput() {
+            return input;
         }
 
         private void exceptOnInterrupt() throws InterruptedException {

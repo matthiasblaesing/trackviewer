@@ -1,9 +1,13 @@
 package main.table;
 
+import java.io.File;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import javax.swing.SwingUtilities;
 
 import javax.swing.table.AbstractTableModel;
@@ -20,6 +24,8 @@ public final class TrackTableModel extends AbstractTableModel {
 
     private static final long serialVersionUID = 819860756869723997L;
     private final List<TrackCollection> tracks = new ArrayList<>();
+    private final Map<File,TrackCollection> fileTrackCollectionMap = new HashMap<>();
+    private final Map<File,Long> readState = new HashMap<>();
     private final String[] columnIds = {"date", "distance", "time", "speed", "altitude", "comments"};
     private final String[] columnLabels = {"Date", "Distance (km)", "Time", "Avg. Speed (km/h)", "Altitude Diff. (m)", "Comments"};
     private final Class<?>[] columnClass = {Date.class, Double.class, Date.class, Double.class, Double.class, String.class};
@@ -107,14 +113,35 @@ public final class TrackTableModel extends AbstractTableModel {
         fireTableDataChanged();
     }
     
-    public void addTracks(TrackCollection... tracks) {
+    public void addTrack(File backingFile, TrackCollection track) {
         assert SwingUtilities.isEventDispatchThread();
-        this.tracks.addAll(Arrays.asList(tracks));
+        Objects.requireNonNull(backingFile);
+        Objects.requireNonNull(track);
+        if (this.fileTrackCollectionMap.containsKey(backingFile))  {
+            this.removeTrack(backingFile);
+        }
+        this.tracks.add(track);
+        this.fileTrackCollectionMap.put(backingFile, track);
+        this.readState.put(backingFile, backingFile.lastModified());
         fireTableDataChanged();
     }
     
     public TrackCollection getTrackCollection(int rowIdx) {
         assert SwingUtilities.isEventDispatchThread();
         return tracks.get(rowIdx);
+    }
+
+    public Map<File,Long> getReadState() {
+        assert SwingUtilities.isEventDispatchThread();
+        return Collections.unmodifiableMap(this.readState);
+    }
+
+    public void removeTrack(File backingFile) {
+        assert SwingUtilities.isEventDispatchThread();
+        Objects.requireNonNull(backingFile);
+        TrackCollection referencedCollection = this.fileTrackCollectionMap.remove(backingFile);
+        this.tracks.remove(referencedCollection);
+        this.readState.remove(backingFile);
+        fireTableDataChanged();
     }
 }
