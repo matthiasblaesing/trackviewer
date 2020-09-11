@@ -39,7 +39,7 @@ public class FormatRenderer extends DefaultTableCellRenderer {
         String v = null;
         try {
             v = formatter.format(value);
-        } catch (IllegalArgumentException e) {
+        } catch (IllegalArgumentException | NullPointerException e) {
             v = String.valueOf(value);
         }
         super.setValue(v);
